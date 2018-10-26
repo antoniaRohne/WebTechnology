@@ -133,4 +133,6 @@ public class Album extends BaseEntity {
 		this.cover = cover;
 	}
 
+	//get @JSONBProperty -> wird gemarshalled
+	//get @JSONBTransient -> wird nicht gemarshalled
 }
