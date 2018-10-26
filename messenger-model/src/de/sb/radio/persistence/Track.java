@@ -130,7 +130,7 @@ public class Track extends BaseEntity {
 		this.ordinal = ordinal;
 	}
 
-	@JsonbProperty @XmlAttribute
+	@JsonbTransient @XmlElement
 	public Person getOwner() {
 		return owner;
 	}
@@ -140,7 +140,7 @@ public class Track extends BaseEntity {
 		this.owner = owner;
 	}
 
-	@JsonbProperty @XmlAttribute
+	@JsonbTransient @XmlElement
 	public Album getAlbum() {
 		return album;
 	}
@@ -150,7 +150,7 @@ public class Track extends BaseEntity {
 		this.album = album;
 	}
 
-	@JsonbProperty @XmlAttribute
+	@JsonbTransient @XmlElement
 	public Document getRecording() {
 		return recording;
 	}

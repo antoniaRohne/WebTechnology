@@ -19,6 +19,7 @@ import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Positive;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
@@ -48,21 +49,22 @@ public class Album extends BaseEntity {
 	@CacheIndex(updateable = true)
 	private String title;
 
-	@NotNull
+	@NotNull @Size(min = 1000, max = 3000)
 	@Column(nullable = false, updatable = true)
 	@CacheIndex(updateable = true)
 	private short releaseYear;
 	
-	@OneToMany(mappedBy="albumReference", cascade = {CascadeType.REMOVE, CascadeType.REFRESH, CascadeType.MERGE, CascadeType.DETACH})
-	@NotNull
+	@OneToMany(mappedBy="album", cascade = {CascadeType.REMOVE, CascadeType.REFRESH, CascadeType.MERGE, CascadeType.DETACH})
+	@NotNull 
 	@JoinColumn(name="tracksRefernce", nullable = false, updatable = true)
 	private Set<Track> tracks;
 
-	@NotNull
+	@NotNull @Positive
 	@Column(nullable = false, updatable = true)
 	private byte trackCount;
 
 	@ManyToOne(optional = false)
+	@NotNull
 	@JoinColumn(name = "coverReference", nullable = false, updatable = true)
 	private Document cover;
 
@@ -104,7 +106,7 @@ public class Album extends BaseEntity {
 		this.releaseYear = releaseYear;
 	}
 
-	@JsonbProperty @XmlAttribute
+	@JsonbTransient @XmlElement
 	public Set<Track> getTracks() {
 		return tracks;
 	}
@@ -123,7 +125,7 @@ public class Album extends BaseEntity {
 		this.trackCount = trackCount;
 	}
 
-	@JsonbProperty @XmlAttribute
+	@JsonbTransient @XmlElement
 	public Document getCover() {
 		return cover;
 	}
@@ -132,7 +134,4 @@ public class Album extends BaseEntity {
 	public void setCover(Document cover) {
 		this.cover = cover;
 	}
-
-	//get @JSONBProperty -> wird gemarshalled
-	//get @JSONBTransient -> wird nicht gemarshalled
 }

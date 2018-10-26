@@ -66,7 +66,7 @@ public class Person extends BaseEntity {
 	@Column(nullable = false, updatable = true)
 	private String surname;
 	
-	@OneToMany(mappedBy="ownerReference", cascade = {CascadeType.REMOVE, CascadeType.REFRESH, CascadeType.MERGE, CascadeType.DETACH})
+	@OneToMany(mappedBy="owner", cascade = {CascadeType.REMOVE, CascadeType.REFRESH, CascadeType.MERGE, CascadeType.DETACH})
 	@NotNull
 	@JoinColumn(name="tracksRefernce", nullable = false, updatable = true)
 	private Set<Track> tracks;
@@ -137,7 +137,7 @@ public class Person extends BaseEntity {
 	 * Returns the group.
 	 * @return the group
 	 */
-	@JsonbProperty @XmlAttribute
+	@JsonbTransient @XmlTransient
 	public Group getGroup () {
 		return this.group;
 	}
