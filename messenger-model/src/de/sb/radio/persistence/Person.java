@@ -2,14 +2,19 @@ package de.sb.radio.persistence;
 
 import static de.sb.radio.persistence.Person.Group.USER;
 import static javax.persistence.EnumType.STRING;
+
+import java.util.Set;
+
 import javax.json.bind.annotation.JsonbProperty;
 import javax.json.bind.annotation.JsonbTransient;
 import javax.json.bind.annotation.JsonbVisibility;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Enumerated;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
 import javax.validation.constraints.Email;
@@ -39,7 +44,7 @@ import de.sb.toolbox.bind.JsonProtectedPropertyStrategy;
 public class Person extends BaseEntity {
 	static public enum Group { USER, ADMIN }
 
-	@NotNull @Size(min = 1, max = 127) @Email
+	@NotNull @Size(min = 1, max = 128) @Email
 	@Column(nullable = false, updatable = true, length = 128, unique = true)
 	@CacheIndex(updateable = true)
 	private String email;
@@ -53,13 +58,18 @@ public class Person extends BaseEntity {
 	@Column(name = "groupAlias", nullable = false, updatable = true)
 	private Group group;
 
-	@NotNull
+	@NotNull @Size(min = 1, max = 31)
 	@Column(nullable = false, updatable = true)
 	private String forename;
 
-	@NotNull
+	@NotNull @Size(min = 1, max = 31)
 	@Column(nullable = false, updatable = true)
 	private String surname;
+	
+	@OneToMany(mappedBy="ownerReference", cascade = {CascadeType.REMOVE, CascadeType.REFRESH, CascadeType.MERGE, CascadeType.DETACH})
+	@NotNull
+	@JoinColumn(name="tracksRefernce", nullable = false, updatable = true)
+	private Set<Track> tracks;
 
 	@ManyToOne(optional = false)
 	@JoinColumn(name = "avatarReference", nullable = false, updatable = true)

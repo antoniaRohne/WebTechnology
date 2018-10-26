@@ -39,19 +39,17 @@ import de.sb.toolbox.bind.JsonProtectedPropertyStrategy;
 public class Track extends BaseEntity {
 	
 	@NotNull @Size(min = 1, max = 127)
-	@Column(nullable = false, updatable = true, length = 128, unique = true)
+	@Column(nullable = false, updatable = true, length = 128)
 	@CacheIndex(updateable = true)
 	private String name;
-	
-	
 
 	@NotNull @Size(min = 1, max = 127)
-	@Column(nullable = false, updatable = true, length = 128, unique = true)
+	@Column(nullable = false, updatable = true, length = 128)
 	@CacheIndex(updateable = true)
 	private String artist;
 	
 	@NotNull @Size(min = 1, max = 31)
-	@Column(nullable = false, updatable = true, length = 32, unique = true)
+	@Column(nullable = false, updatable = true, length = 32)
 	@CacheIndex(updateable = true)
 	private String genre;
 
@@ -61,12 +59,12 @@ public class Track extends BaseEntity {
 
 	@ManyToOne(optional = false)
 	@NotNull
-	@Column(nullable = false, updatable = true)
+	@JoinColumn(name = "ownerReference",nullable = false, updatable = true)
 	private Person owner;
 
 	@ManyToOne(optional = false)
 	@NotNull
-	@Column(nullable = false, updatable = true)
+	@JoinColumn(name = "albumReference", nullable = false, updatable = true)
 	private Album album;
 
 	@ManyToOne(optional = false)

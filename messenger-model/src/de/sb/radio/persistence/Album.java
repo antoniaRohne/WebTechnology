@@ -1,15 +1,20 @@
 package de.sb.radio.persistence;
 
-import static de.sb.radio.persistence.Person.Group.USER;
 import static javax.persistence.EnumType.STRING;
+
+import java.util.Collections;
+import java.util.Set;
+
 import javax.json.bind.annotation.JsonbProperty;
 import javax.json.bind.annotation.JsonbTransient;
 import javax.json.bind.annotation.JsonbVisibility;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Enumerated;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
 import javax.validation.constraints.Email;
@@ -42,17 +47,16 @@ public class Album extends BaseEntity {
 	@Column(nullable = false, updatable = true, length = 128, unique = true)
 	@CacheIndex(updateable = true)
 	private String title;
-	
-
-	@NotNull
-	@Column(nullable = false, updatable = true, unique = true)
-	@CacheIndex(updateable = true)
-	private short releaseYear;
-	
 
 	@NotNull
 	@Column(nullable = false, updatable = true)
-	private Track[] tracks;
+	@CacheIndex(updateable = true)
+	private short releaseYear;
+	
+	@OneToMany(mappedBy="albumReference", cascade = {CascadeType.REMOVE, CascadeType.REFRESH, CascadeType.MERGE, CascadeType.DETACH})
+	@NotNull
+	@JoinColumn(name="tracksRefernce", nullable = false, updatable = true)
+	private Set<Track> tracks;
 
 	@NotNull
 	@Column(nullable = false, updatable = true)
@@ -74,8 +78,9 @@ public class Album extends BaseEntity {
 	 * Creates a new instance with the given avatar, an empty password and group USER.
 	 * @param avatar the avatar, or {@code null} for none
 	 */
-	public Album (final Document cover) {
+	public Album (final Document cover){
 		this.cover = cover;
+		this.tracks = Collections.emptySet();
 	}
 
 	
@@ -100,12 +105,11 @@ public class Album extends BaseEntity {
 	}
 
 	@JsonbProperty @XmlAttribute
-	public Track[] getTracks() {
+	public Set<Track> getTracks() {
 		return tracks;
 	}
 
-
-	public void setTracks(Track[] tracks) {
+	public void setTracks(Set<Track> tracks) {
 		this.tracks = tracks;
 	}
 
