@@ -1,27 +1,22 @@
 package de.sb.radio.persistence;
 
-import static de.sb.radio.persistence.Person.Group.USER;
-import static javax.persistence.EnumType.STRING;
 import javax.json.bind.annotation.JsonbProperty;
 import javax.json.bind.annotation.JsonbTransient;
 import javax.json.bind.annotation.JsonbVisibility;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.Enumerated;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
-import javax.validation.constraints.Email;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.PositiveOrZero;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlIDREF;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
-import org.eclipse.persistence.annotations.CacheIndex;
+
 import de.sb.toolbox.Copyright;
 import de.sb.toolbox.bind.JsonProtectedPropertyStrategy;
 
@@ -39,36 +34,31 @@ import de.sb.toolbox.bind.JsonProtectedPropertyStrategy;
 public class Track extends BaseEntity {
 	
 	@NotNull @Size(min = 1, max = 127)
-	@Column(nullable = false, updatable = true, length = 128)
-	@CacheIndex(updateable = true)
+	@Column(nullable = false, updatable = true, length = 127)
 	private String name;
 
 	@NotNull @Size(min = 1, max = 127)
-	@Column(nullable = false, updatable = true, length = 128)
-	@CacheIndex(updateable = true)
+	@Column(nullable = false, updatable = true, length = 127)
 	private String artist;
 	
 	@NotNull @Size(min = 1, max = 31)
-	@Column(nullable = false, updatable = true, length = 32)
-	@CacheIndex(updateable = true)
+	@Column(nullable = false, updatable = true, length = 31)
 	private String genre;
 
-	@NotNull
+	@PositiveOrZero
 	@Column(nullable = false, updatable = true)
 	private byte ordinal;
 
 	@ManyToOne(optional = false)
-	@NotNull
-	@JoinColumn(name = "ownerReference",nullable = false, updatable = true)
+	@JoinColumn(name = "ownerReference",nullable = false, updatable = false, insertable = true)
 	private Person owner;
 
 	@ManyToOne(optional = false)
-	@NotNull
-	@JoinColumn(name = "albumReference", nullable = false, updatable = true)
+	@JoinColumn(name = "albumReference", nullable = false, updatable = false, insertable = true)
 	private Album album;
 
 	@ManyToOne(optional = false)
-	@JoinColumn(name = "recordingReference", nullable = false, updatable = true)
+	@JoinColumn(name = "recordingReference", nullable = false, updatable = false, insertable = true)
 	private Document recording;
 
 
@@ -76,7 +66,7 @@ public class Track extends BaseEntity {
 	 * Default constructor for JPA, JSON-B and JAX-B.
 	 */
 	protected Track () {
-		this(null);
+		this(null,null,null);
 	}
 
 
@@ -84,9 +74,9 @@ public class Track extends BaseEntity {
 	 * Creates a new instance with the given avatar, an empty password and group USER.
 	 * @param avatar the avatar, or {@code null} for none
 	 */
-	public Track (final Document recording) {
-		//this.owner = 
-		//this.album =
+	public Track (final Document recording, final Person owner, final Album album) {
+		this.owner = owner; 
+		this.album = album;
 		this.recording = recording;
 	}
 
@@ -136,27 +126,15 @@ public class Track extends BaseEntity {
 	}
 
 
-	public void setOwner(Person owner) {
-		this.owner = owner;
-	}
-
 	@JsonbTransient @XmlElement
 	public Album getAlbum() {
 		return album;
 	}
 
 
-	public void setAlbum(Album album) {
-		this.album = album;
-	}
-
 	@JsonbTransient @XmlElement
 	public Document getRecording() {
 		return recording;
 	}
 
-
-	public void setRecording(Document recording) {
-		this.recording = recording;
-	}
 }

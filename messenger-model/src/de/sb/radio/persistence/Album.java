@@ -30,6 +30,7 @@ import javax.xml.bind.annotation.XmlType;
 import org.eclipse.persistence.annotations.CacheIndex;
 import de.sb.toolbox.Copyright;
 import de.sb.toolbox.bind.JsonProtectedPropertyStrategy;
+import de.sb.toolbox.val.NotEqual;
 
 
 /**
@@ -44,28 +45,25 @@ import de.sb.toolbox.bind.JsonProtectedPropertyStrategy;
 @Copyright(year=2005, holders="Sascha Baumeister")
 public class Album extends BaseEntity {
 	
-	@NotNull @Size(min = 0, max = 127)
-	@Column(nullable = false, updatable = true, length = 128, unique = true)
-	@CacheIndex(updateable = true)
+	@NotNull @Size(max = 127)
+	@Column(nullable = false, updatable = true, length = 128)
 	private String title;
 
-	@NotNull @Size(min = 1000, max = 3000)
+	@NotNull @NotEqual("0")
 	@Column(nullable = false, updatable = true)
-	@CacheIndex(updateable = true)
 	private short releaseYear;
 	
-	@OneToMany(mappedBy="album", cascade = {CascadeType.REMOVE, CascadeType.REFRESH, CascadeType.MERGE, CascadeType.DETACH})
-	@NotNull 
-	@JoinColumn(name="tracksRefernce", nullable = false, updatable = true)
-	private Set<Track> tracks;
-
 	@NotNull @Positive
 	@Column(nullable = false, updatable = true)
 	private byte trackCount;
-
-	@ManyToOne(optional = false)
+	
 	@NotNull
-	@JoinColumn(name = "coverReference", nullable = false, updatable = true)
+	@OneToMany(mappedBy="album", cascade = {CascadeType.REMOVE, CascadeType.REFRESH, CascadeType.MERGE, CascadeType.DETACH}) 
+	private Set<Track> tracks;
+
+	@NotNull
+	@ManyToOne(optional = false)
+	@JoinColumn(name = "coverReference", nullable = false, updatable = false, insertable = true)
 	private Document cover;
 
 
@@ -111,10 +109,6 @@ public class Album extends BaseEntity {
 		return tracks;
 	}
 
-	public void setTracks(Set<Track> tracks) {
-		this.tracks = tracks;
-	}
-
 	@JsonbProperty @XmlAttribute
 	public byte getTrackCount() {
 		return trackCount;
@@ -128,10 +122,5 @@ public class Album extends BaseEntity {
 	@JsonbTransient @XmlElement
 	public Document getCover() {
 		return cover;
-	}
-
-
-	public void setCover(Document cover) {
-		this.cover = cover;
 	}
 }

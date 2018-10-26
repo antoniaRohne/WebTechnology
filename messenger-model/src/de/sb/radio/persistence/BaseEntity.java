@@ -38,7 +38,7 @@ import de.sb.toolbox.bind.XmlLongToStringAdapter;
 @XmlSeeAlso({ Document.class, Track.class, Album.class, Person.class })
 @JsonbVisibility(JsonProtectedPropertyStrategy.class)
 @Entity
-@Table(schema = "radio", name = "BaseEntity", indexes = @Index(columnList = "discriminator"))
+@Table(schema = "radio", name = "BaseEntity")
 @Inheritance(strategy = JOINED)
 @DiscriminatorColumn(name = "discriminator")
 @Copyright(year=2005, holders="Sascha Baumeister")

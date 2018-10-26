@@ -3,6 +3,7 @@ package de.sb.radio.persistence;
 import static de.sb.radio.persistence.Person.Group.USER;
 import static javax.persistence.EnumType.STRING;
 
+import java.util.Collections;
 import java.util.Set;
 
 import javax.json.bind.annotation.JsonbProperty;
@@ -66,9 +67,8 @@ public class Person extends BaseEntity {
 	@Column(nullable = false, updatable = true)
 	private String surname;
 	
-	@OneToMany(mappedBy="owner", cascade = {CascadeType.REMOVE, CascadeType.REFRESH, CascadeType.MERGE, CascadeType.DETACH})
 	@NotNull
-	@JoinColumn(name="tracksRefernce", nullable = false, updatable = true)
+	@OneToMany(mappedBy="owner", cascade = {CascadeType.REMOVE, CascadeType.REFRESH, CascadeType.MERGE, CascadeType.DETACH})
 	private Set<Track> tracks;
 
 	@ManyToOne(optional = false)
@@ -92,6 +92,7 @@ public class Person extends BaseEntity {
 		this.passwordHash = HashTools.sha256HashCode("");
 		this.group = USER;
 		this.avatar = avatar;
+		this.tracks = Collections.emptySet();
 	}
 
 

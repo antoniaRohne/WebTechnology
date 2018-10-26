@@ -8,6 +8,7 @@ public class SanityCheck {
 	static public void main(final String[]args) {
 		EntityManagerFactory emf = Persistence.createEntityManagerFactory("radio");
 		EntityManager em = emf.createEntityManager();
-		em.find(BaseEntity.class,1L);
+		Person p = em.find(Person.class,2L);
+		System.out.println(p.getEmail());
 	}
 }
