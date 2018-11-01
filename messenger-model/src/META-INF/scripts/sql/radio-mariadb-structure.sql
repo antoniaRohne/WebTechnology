@@ -64,7 +64,9 @@ CREATE TABLE Track (
 	FOREIGN KEY (trackIdentity) REFERENCES BaseEntity (identity) ON DELETE CASCADE ON UPDATE CASCADE,
 	FOREIGN KEY (albumReference) REFERENCES Album (albumIdentity) ON DELETE CASCADE ON UPDATE CASCADE,
 	FOREIGN KEY (ownerReference) REFERENCES Person (personIdentity) ON DELETE CASCADE ON UPDATE CASCADE,
-	FOREIGN KEY (recordingReference) REFERENCES Document (documentIdentity) ON DELETE CASCADE ON UPDATE CASCADE
+	FOREIGN KEY (recordingReference) REFERENCES Document (documentIdentity) ON DELETE CASCADE ON UPDATE CASCADE,
+	KEY (artist),
+	KEY (genre)
 );
 
 -- define views
