@@ -6,6 +6,10 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+<<<<<<< HEAD
+=======
+
+>>>>>>> 0b5ae164251fad8991b8435acaed274d91c81a6e
 import javax.imageio.ImageIO;
 import javax.json.bind.annotation.JsonbProperty;
 import javax.json.bind.annotation.JsonbTransient;
@@ -17,10 +21,14 @@ import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
+<<<<<<< HEAD
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
+=======
+
+>>>>>>> 0b5ae164251fad8991b8435acaed274d91c81a6e
 import de.sb.toolbox.Copyright;
 import de.sb.toolbox.bind.JsonProtectedPropertyStrategy;
 
@@ -59,8 +67,11 @@ import de.sb.toolbox.bind.JsonProtectedPropertyStrategy;
  * representing a billion Dollar a year cash cow for some manufacturers.</li>
  * </ul>
  */
+<<<<<<< HEAD
 @XmlType
 @XmlRootElement
+=======
+>>>>>>> 0b5ae164251fad8991b8435acaed274d91c81a6e
 @JsonbVisibility(JsonProtectedPropertyStrategy.class)
 @Entity
 @Table(schema = "radio", name = "Document")
@@ -106,7 +117,11 @@ public class Document extends BaseEntity {
 	 * Returns the content hash.
 	 * @return the quasi-unique SHA-256 hash of the content
 	 */
+<<<<<<< HEAD
 	@JsonbProperty @XmlAttribute
+=======
+	@JsonbProperty 
+>>>>>>> 0b5ae164251fad8991b8435acaed274d91c81a6e
 	public byte[] getContentHash () {
 		return this.contentHash;
 	}
@@ -116,7 +131,11 @@ public class Document extends BaseEntity {
 	 * Returns the content type.
 	 * @return the content type
 	 */
+<<<<<<< HEAD
 	@JsonbProperty @XmlAttribute
+=======
+	@JsonbProperty 
+>>>>>>> 0b5ae164251fad8991b8435acaed274d91c81a6e
 	public String getContentType () {
 		return this.contentType;
 	}
@@ -135,7 +154,11 @@ public class Document extends BaseEntity {
 	 * Returns the content.
 	 * @return the content
 	 */
+<<<<<<< HEAD
 	@JsonbTransient @XmlTransient
+=======
+	@JsonbTransient
+>>>>>>> 0b5ae164251fad8991b8435acaed274d91c81a6e
 	public byte[] getContent () {
 		return this.content;
 	}
