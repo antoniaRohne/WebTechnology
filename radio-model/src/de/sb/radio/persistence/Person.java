@@ -21,19 +21,9 @@ import javax.persistence.Table;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-<<<<<<< HEAD
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlIDREF;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
-import javax.xml.bind.annotation.XmlType;
-import org.eclipse.persistence.annotations.CacheIndex;
-=======
 
 import org.eclipse.persistence.annotations.CacheIndex;
 
->>>>>>> 0b5ae164251fad8991b8435acaed274d91c81a6e
 import de.sb.toolbox.Copyright;
 import de.sb.toolbox.bind.JsonProtectedPropertyStrategy;
 
@@ -41,11 +31,6 @@ import de.sb.toolbox.bind.JsonProtectedPropertyStrategy;
 /**
  * This class models person entities.
  */
-<<<<<<< HEAD
-@XmlType
-@XmlRootElement
-=======
->>>>>>> 0b5ae164251fad8991b8435acaed274d91c81a6e
 @JsonbVisibility(JsonProtectedPropertyStrategy.class)
 @Entity
 @Table(schema = "radio", name = "Person")
@@ -109,11 +94,7 @@ public class Person extends BaseEntity {
 	 * Returns the email.
 	 * @return the email address
 	 */
-<<<<<<< HEAD
-	@JsonbProperty @XmlAttribute
-=======
 	@JsonbProperty 
->>>>>>> 0b5ae164251fad8991b8435acaed274d91c81a6e
 	public String getEmail () {
 		return this.email;
 	}
@@ -132,11 +113,7 @@ public class Person extends BaseEntity {
 	 * Returns the password hash.
 	 * @return the password hash
 	 */
-<<<<<<< HEAD
-	@JsonbTransient @XmlTransient
-=======
 	@JsonbTransient
->>>>>>> 0b5ae164251fad8991b8435acaed274d91c81a6e
 	public byte[] getPasswordHash () {
 		return this.passwordHash;
 	}
@@ -155,11 +132,7 @@ public class Person extends BaseEntity {
 	 * Returns the group.
 	 * @return the group
 	 */
-<<<<<<< HEAD
-	@JsonbTransient @XmlTransient
-=======
 	@JsonbTransient
->>>>>>> 0b5ae164251fad8991b8435acaed274d91c81a6e
 	public Group getGroup () {
 		return this.group;
 	}
@@ -178,11 +151,7 @@ public class Person extends BaseEntity {
 	 * Returns the forename.
 	 * @return the forename
 	 */
-<<<<<<< HEAD
-	@JsonbProperty @XmlElement
-=======
 	@JsonbProperty 
->>>>>>> 0b5ae164251fad8991b8435acaed274d91c81a6e
 	public String getForename () {
 		return this.forename;
 	}
@@ -201,11 +170,7 @@ public class Person extends BaseEntity {
 	 * Returns the surname.
 	 * @return the surname
 	 */
-<<<<<<< HEAD
-	@JsonbProperty @XmlElement
-=======
 	@JsonbProperty 
->>>>>>> 0b5ae164251fad8991b8435acaed274d91c81a6e
 	public String getSurname () {
 		return this.surname;
 	}
@@ -224,11 +189,7 @@ public class Person extends BaseEntity {
 	 * Returns the avatar reference. This operation is provided solely for marshaling purposes.
 	 * @return the identity of the *:1 related avatar, or {@code 0} for none
 	 */
-<<<<<<< HEAD
-	@JsonbProperty @XmlTransient
-=======
 	@JsonbProperty 
->>>>>>> 0b5ae164251fad8991b8435acaed274d91c81a6e
 	protected long getAvatarReference () {
 		return this.avatar == null ? 0 : this.avatar.getIdentity();
 	}
@@ -238,11 +199,7 @@ public class Person extends BaseEntity {
 	 * Returns the avatar.
 	 * @return the *:1 related avatar
 	 */
-<<<<<<< HEAD
-	@JsonbTransient @XmlAttribute(name = "avatarReference") @XmlIDREF
-=======
 	@JsonbTransient
->>>>>>> 0b5ae164251fad8991b8435acaed274d91c81a6e
 	public Document getAvatar () {
 		return this.avatar;
 	}

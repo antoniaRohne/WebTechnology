@@ -12,13 +12,6 @@ import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.PositiveOrZero;
 import javax.validation.constraints.Size;
-<<<<<<< HEAD
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
-=======
->>>>>>> 0b5ae164251fad8991b8435acaed274d91c81a6e
 
 import de.sb.toolbox.Copyright;
 import de.sb.toolbox.bind.JsonProtectedPropertyStrategy;
@@ -27,11 +20,6 @@ import de.sb.toolbox.bind.JsonProtectedPropertyStrategy;
 /**
  * This class models person entities.
  */
-<<<<<<< HEAD
-@XmlType
-@XmlRootElement
-=======
->>>>>>> 0b5ae164251fad8991b8435acaed274d91c81a6e
 @JsonbVisibility(JsonProtectedPropertyStrategy.class)
 @Entity
 @Table(schema = "radio", name = "Track")
@@ -86,11 +74,7 @@ public class Track extends BaseEntity {
 		this.recording = recording;
 	}
 
-<<<<<<< HEAD
-	@JsonbProperty @XmlAttribute
-=======
 	@JsonbProperty
->>>>>>> 0b5ae164251fad8991b8435acaed274d91c81a6e
 	public String getName() {
 		return name;
 	}
@@ -100,11 +84,7 @@ public class Track extends BaseEntity {
 		this.name = name;
 	}
 
-<<<<<<< HEAD
-	@JsonbProperty @XmlAttribute
-=======
 	@JsonbProperty
->>>>>>> 0b5ae164251fad8991b8435acaed274d91c81a6e
 	public String getArtist() {
 		return artist;
 	}
@@ -114,11 +94,7 @@ public class Track extends BaseEntity {
 		this.artist = artist;
 	}
 
-<<<<<<< HEAD
-	@JsonbProperty @XmlAttribute
-=======
 	@JsonbProperty
->>>>>>> 0b5ae164251fad8991b8435acaed274d91c81a6e
 	public String getGenre() {
 		return genre;
 	}
@@ -128,11 +104,7 @@ public class Track extends BaseEntity {
 		this.genre = genre;
 	}
 
-<<<<<<< HEAD
-	@JsonbProperty @XmlAttribute
-=======
 	@JsonbProperty
->>>>>>> 0b5ae164251fad8991b8435acaed274d91c81a6e
 	public byte getOrdinal() {
 		return ordinal;
 	}
@@ -142,31 +114,19 @@ public class Track extends BaseEntity {
 		this.ordinal = ordinal;
 	}
 
-<<<<<<< HEAD
-	@JsonbTransient @XmlElement
-=======
 	@JsonbTransient
->>>>>>> 0b5ae164251fad8991b8435acaed274d91c81a6e
 	public Person getOwner() {
 		return owner;
 	}
 
 
-<<<<<<< HEAD
-	@JsonbTransient @XmlElement
-=======
 	@JsonbTransient
->>>>>>> 0b5ae164251fad8991b8435acaed274d91c81a6e
 	public Album getAlbum() {
 		return album;
 	}
 
 
-<<<<<<< HEAD
-	@JsonbTransient @XmlElement
-=======
 	@JsonbTransient
->>>>>>> 0b5ae164251fad8991b8435acaed274d91c81a6e
 	public Document getRecording() {
 		return recording;
 	}

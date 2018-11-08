@@ -2,10 +2,6 @@ package de.sb.radio.persistence;
 
 import static javax.persistence.GenerationType.IDENTITY;
 import static javax.persistence.InheritanceType.JOINED;
-<<<<<<< HEAD
-import static javax.xml.bind.annotation.XmlAccessType.NONE;
-=======
->>>>>>> 0b5ae164251fad8991b8435acaed274d91c81a6e
 import javax.json.bind.annotation.JsonbProperty;
 import javax.json.bind.annotation.JsonbVisibility;
 import javax.persistence.Column;
@@ -18,20 +14,8 @@ import javax.persistence.Inheritance;
 import javax.persistence.Table;
 import javax.persistence.Version;
 import javax.validation.constraints.Positive;
-<<<<<<< HEAD
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlID;
-import javax.xml.bind.annotation.XmlSeeAlso;
-import javax.xml.bind.annotation.XmlType;
-import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import de.sb.toolbox.Copyright;
 import de.sb.toolbox.bind.JsonProtectedPropertyStrategy;
-import de.sb.toolbox.bind.XmlLongToStringAdapter;
-=======
-import de.sb.toolbox.Copyright;
-import de.sb.toolbox.bind.JsonProtectedPropertyStrategy;
->>>>>>> 0b5ae164251fad8991b8435acaed274d91c81a6e
 
 
 /**
@@ -41,18 +25,9 @@ import de.sb.toolbox.bind.JsonProtectedPropertyStrategy;
  * accessor methods to allow JPA entity proxies to fetch the correct state. Note that this class
  * has a natural ordering that is inconsistent with {@link Object#equals(Object)}.
  */
-<<<<<<< HEAD
-@XmlType
-@XmlAccessorType(NONE)
-@XmlSeeAlso({ Document.class, Track.class, Album.class, Person.class })
-@JsonbVisibility(JsonProtectedPropertyStrategy.class)
-@Entity
-@Table(schema = "radio", name = "BaseEntity")
-=======
 @JsonbVisibility(JsonProtectedPropertyStrategy.class)
 @Entity
 @Table(schema = "radio", name = "BaseEntity", indexes = @Index(columnList = "discriminator"))
->>>>>>> 0b5ae164251fad8991b8435acaed274d91c81a6e
 @Inheritance(strategy = JOINED)
 @DiscriminatorColumn(name = "discriminator")
 @Copyright(year=2005, holders="Sascha Baumeister")
@@ -87,12 +62,7 @@ public abstract class BaseEntity implements Comparable<BaseEntity> {
 	 * instance has been inserted into the database.
 	 * @return the identity (primary key)
 	 */
-<<<<<<< HEAD
-	@JsonbProperty @XmlAttribute @XmlID
-	@XmlJavaTypeAdapter(type=long.class, value=XmlLongToStringAdapter.class)
-=======
 	@JsonbProperty
->>>>>>> 0b5ae164251fad8991b8435acaed274d91c81a6e
 	public long getIdentity () {
 		return this.identity;
 	}
@@ -111,11 +81,7 @@ public abstract class BaseEntity implements Comparable<BaseEntity> {
 	 * Returns the version. This property is currently inactive.
 	 * @return the version
 	 */
-<<<<<<< HEAD
-	@JsonbProperty @XmlAttribute
-=======
 	@JsonbProperty
->>>>>>> 0b5ae164251fad8991b8435acaed274d91c81a6e
 	public int getVersion () {
 		return this.version;
 	}
@@ -134,11 +100,7 @@ public abstract class BaseEntity implements Comparable<BaseEntity> {
 	 * Returns the creation timestamp.
 	 * @return the creation timestamp in milliseconds since midnight 1/1/1970 UTC
 	 */
-<<<<<<< HEAD
-	@JsonbProperty @XmlAttribute
-=======
 	@JsonbProperty
->>>>>>> 0b5ae164251fad8991b8435acaed274d91c81a6e
 	public long getCreationTimestamp () {
 		return this.creationTimestamp;
 	}

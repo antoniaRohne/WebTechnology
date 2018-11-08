@@ -1,10 +1,5 @@
 package de.sb.radio.persistence;
 
-<<<<<<< HEAD
-import static javax.persistence.EnumType.STRING;
-
-=======
->>>>>>> 0b5ae164251fad8991b8435acaed274d91c81a6e
 import java.util.Collections;
 import java.util.Set;
 
@@ -14,33 +9,15 @@ import javax.json.bind.annotation.JsonbVisibility;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-<<<<<<< HEAD
-import javax.persistence.Enumerated;
-=======
->>>>>>> 0b5ae164251fad8991b8435acaed274d91c81a6e
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
-<<<<<<< HEAD
-import javax.validation.constraints.Email;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Positive;
-import javax.validation.constraints.Size;
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlIDREF;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
-import javax.xml.bind.annotation.XmlType;
-import org.eclipse.persistence.annotations.CacheIndex;
-=======
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.Size;
 
->>>>>>> 0b5ae164251fad8991b8435acaed274d91c81a6e
 import de.sb.toolbox.Copyright;
 import de.sb.toolbox.bind.JsonProtectedPropertyStrategy;
 import de.sb.toolbox.val.NotEqual;
@@ -49,11 +26,6 @@ import de.sb.toolbox.val.NotEqual;
 /**
  * This class models person entities.
  */
-<<<<<<< HEAD
-@XmlType
-@XmlRootElement
-=======
->>>>>>> 0b5ae164251fad8991b8435acaed274d91c81a6e
 @JsonbVisibility(JsonProtectedPropertyStrategy.class)
 @Entity
 @Table(schema = "radio", name = "Album")
@@ -100,11 +72,7 @@ public class Album extends BaseEntity {
 	}
 
 	
-<<<<<<< HEAD
-	@JsonbProperty @XmlAttribute
-=======
 	@JsonbProperty
->>>>>>> 0b5ae164251fad8991b8435acaed274d91c81a6e
 	public String getTitle() {
 		return title;
 	}
@@ -114,11 +82,7 @@ public class Album extends BaseEntity {
 		this.title = title;
 	}
 
-<<<<<<< HEAD
-	@JsonbProperty @XmlAttribute
-=======
 	@JsonbProperty 
->>>>>>> 0b5ae164251fad8991b8435acaed274d91c81a6e
 	public short getReleaseYear() {
 		return releaseYear;
 	}
@@ -128,20 +92,12 @@ public class Album extends BaseEntity {
 		this.releaseYear = releaseYear;
 	}
 
-<<<<<<< HEAD
-	@JsonbTransient @XmlElement
-=======
 	@JsonbTransient 
->>>>>>> 0b5ae164251fad8991b8435acaed274d91c81a6e
 	public Set<Track> getTracks() {
 		return tracks;
 	}
 
-<<<<<<< HEAD
-	@JsonbProperty @XmlAttribute
-=======
 	@JsonbProperty 
->>>>>>> 0b5ae164251fad8991b8435acaed274d91c81a6e
 	public byte getTrackCount() {
 		return trackCount;
 	}
@@ -151,16 +107,8 @@ public class Album extends BaseEntity {
 		this.trackCount = trackCount;
 	}
 
-<<<<<<< HEAD
-	@JsonbTransient @XmlElement
-	public Document getCover() {
-		return cover;
-	}
-}
-=======
 	@JsonbTransient 
 	public Document getCover() {
 		return cover;
 	}
 }
->>>>>>> 0b5ae164251fad8991b8435acaed274d91c81a6e
