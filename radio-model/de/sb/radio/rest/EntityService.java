@@ -1,8 +1,5 @@
 package de.sb.radio.rest;
 
-import static de.sb.radio.rest.BasicAuthenticationFilter.REQUESTER_IDENTITY;
-import static javax.ws.rs.core.Response.Status.FORBIDDEN;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,10 +22,12 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import org.eclipse.persistence.internal.oxm.schema.model.Group;
+
+import de.sb.radio.persistence.Album;
 import de.sb.radio.persistence.BaseEntity;
 import de.sb.radio.persistence.Document;
 import de.sb.radio.persistence.Person;
-import de.sb.radio.persistence.Person.Group;
 import de.sb.toolbox.Copyright;
 import de.sb.toolbox.net.RestJpaLifecycleProvider;
 
@@ -52,7 +51,6 @@ public class EntityService {
 			+ "(:email is null or p.email = :email) and "
 			+ "(:givenName is null or p.surname = :givenName) and "
 			+ "(:familyName is null or p.forename = :familyName) ";
-	// Result offset and limit is missing
 
 	static private final String ALBUM_FILTER_QUERY = "select a.identity from Album as a where "
 			+ "(:lowerCreationTimestamp is null or a.creationTimestamp >= :lowerCreationTimestamp) and "
@@ -60,7 +58,6 @@ public class EntityService {
 			+ "(:title is null or a.title = :title) and "
 			+ "(:releaseYear is null or a.releaseYear = :releaseYear) and "
 			+ "(:trackCount is null or a.trackCount = :trackCount) ";
-	// Result offset and limit is missing
 
 	static private final String TRACKS_FILTER_QUERY = "select t.identity from Tracks as t where "
 			+ "(:lowerCreationTimestamp is null or t.creationTimestamp >= :lowerCreationTimestamp) and  "
@@ -69,7 +66,6 @@ public class EntityService {
 			+ "(:artist is null or t.artist = :artist) and "
 			+ "(:genre is null or t.genre = :genre) and " 
 			+ "(:ordinal is null or t.ordinal = :ordinal)";
-	// Result offset and limit is missing
 
 	/**
 	 * Returns the entity with the given identity.
@@ -113,11 +109,35 @@ public class EntityService {
 		return Response.status(200).entity(result).build();
 
 	}
+	
+	/**
+	 * POST /albums: Creates or updates a album from template data within the
+	 * HTTP request body in application/json format.
+	 */
+
+	@POST
+	@Path("/albums")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	
+	public Response addAlbum(@HeaderParam(REQUESTER_IDENTITY) @Positive final long requesterIdentity,Album template) {
+		final EntityManager radioManager = RestJpaLifecycleProvider.entityManager("radio");
+		final Person requester = radioManager.find(Person.class, requesterIdentity);		
+		if (requester == null || requester.getGroup() != Group.ADMIN)
+			throw new ClientErrorException(FORBIDDEN);
+				
+		String result = "Str" + template + template.getIdentity();
+		return Response.status(200).entity(result).build();
+
+	}
+	
+	
+	
 	 
 
 	/**
 	 * Returns the person matching the given identity or the person matching the
-	 * given header field “Requester-Identity”
+	 * given header field “Requester-Identity�?
 	 */
 	@GET
 	@Path("people/{id}")
