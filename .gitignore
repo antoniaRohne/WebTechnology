@@ -31,9 +31,9 @@ RemoteSystemsTempFiles/
 *.pydevproject
 .project
 .metadata
-bin/**
-tmp/**
-tmp/**/*
+bin/
+tmp/
+tmp/
 *.tmp
 *.bak
 *.swp
