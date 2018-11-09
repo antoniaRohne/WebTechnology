@@ -22,4 +22,17 @@ INSERT INTO BaseEntity VALUES (0, "Person", 1, UNIX_TIMESTAMP()*1000);
 SET @id = LAST_INSERT_ID();
 INSERT INTO Person VALUES (@id, 1, "sascha.baumeister@gmail.com", UNHEX(SHA2("sascha",256)), "ADMIN", "Baumeister", "Sascha");
 
+INSERT INTO BaseEntity VALUES (0, "Album", 1, UNIX_TIMESTAMP()*1000);
+SET @id = LAST_INSERT_ID();
+INSERT INTO Album VALUES (@id, 1, "Winter", 1992, 11);
+
+INSERT INTO BaseEntity VALUES (0, "Album", 1, UNIX_TIMESTAMP()*1000);
+SET @id = LAST_INSERT_ID();
+INSERT INTO Album VALUES (@id, 1, "Autumn", 2012, 20);
+
+INSERT INTO BaseEntity VALUES (0, "Album", 1, UNIX_TIMESTAMP()*1000);
+SET @id = LAST_INSERT_ID();
+INSERT INTO Album VALUES (@id, 1, "I am Ok", 2008, 14);
+
 SELECT identity, discriminator, email, HEX(contentHash) from JoinedEntity;
+
