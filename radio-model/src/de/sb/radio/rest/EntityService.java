@@ -203,7 +203,7 @@ public class EntityService {
 
 	/**
 	 * Returns the person matching the given identity or the person matching the
-	 * given header field “Requester-Identity�?
+	 * given header field â€œRequester-Identityâ€?
 	 */
 	@GET
 	@Path("people/{id}")
@@ -262,7 +262,7 @@ public class EntityService {
 
 	/**
 	 * : Returns the document-content and document-type matching the given
-	 * document ID – NOT it's JSON-Representation! Use result class "Response"
+	 * document ID â€“ NOT it's JSON-Representation! Use result class "Response"
 	 * in order to set both using the document's content and content-type.
 	 **/
 	@GET
@@ -276,6 +276,137 @@ public class EntityService {
 
 		return requester;
 	}
+	
+	
+	/**
+	 * Returns a list albums matching the given query
+	 * 
+	 * @param albumIdentity
+	 *            the album identity
+	 * @return the matching list of albums (HTTP 200)
+	 * @throws ClientErrorException
+	 *             (HTTP 404) if the no album is found
+	 * @throws PersistenceException
+	 *             (HTTP 500) if there is a problem with the persistence layer
+	 * @throws IllegalStateException
+	 *             (HTTP 500) if the entity manager associated with the current
+	 *             thread is not open
+	 */
+	
+	@GET
+	@Path("albums")
+	@Produces(MediaType.APPLICATION_JSON)
+	public List<Album> queryAlbum(
+		@QueryParam("resultOffset")	final int resultOffset, // query parameters, set search range 
+		@QueryParam("resultLimit")	final int resultLimit,
+		@QueryParam("title") final String title // search by title 
+	) {
+		final EntityManager radioManager = RestJpaLifecycleProvider.entityManager("radio");
+		final TypedQuery<Long> query = radioManager.createQuery(ALBUM_FILTER_QUERY, Long.class);
+		
+		if (resultOffset>0) query.setFirstResult(resultOffset); //
+		if (resultLimit>0) query.setMaxResults(resultLimit);
+		final List<Long> references = query
+				.setParameter("lowerCreationTimestamp", null)
+				.setParameter("upperCreationTimestamp", null)
+				.setParameter("title", title)
+				.setParameter("releaseYear", null)
+				.setParameter("trackCount", null)
+				.getResultList();
+		
+		final List<Album> albums = new ArrayList<>(); // to save and check the data in the second level cache ??? 
+		for (final long reference : references) {
+			final Album album = radioManager.find(Album.class, reference);
+			if (album != null) albums.add(album);
+		}
+		return albums;
+	}
+	
+	/**
+	 * : Returns the album-content and album-type matching the given
+	 * document ID – NOT it's JSON-Representation! Use result class "Response"
+	 * in order to set both using the album's content and content-type.
+	 **/
+	@GET
+	@Path("albums/{id}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public BaseEntity queryAlbum(@PathParam("id") @Positive final long documentIdentity) {
+		final EntityManager radioManager = RestJpaLifecycleProvider.entityManager("radio");
+		final Album requester = radioManager.find(Album.class, documentIdentity);
+		if (requester == null)
+			throw new ClientErrorException(Status.NOT_FOUND);
+
+		return requester;
+	}
+	
+	
+	
+	
+	/**
+	 * Returns a list tracks matching the given query
+	 * 
+	 * @param albumIdentity
+	 *            the track identity
+	 * @return the matching list of track (HTTP 200)
+	 * @throws ClientErrorException
+	 *             (HTTP 404) if the no tracks is found
+	 * @throws PersistenceException
+	 *             (HTTP 500) if there is a problem with the persistence layer
+	 * @throws IllegalStateException
+	 *             (HTTP 500) if the entity manager associated with the current
+	 *             thread is not open
+	 */
+	
+	@GET
+	@Path("tracks")
+	@Produces(MediaType.APPLICATION_JSON)
+	public List<Track> queryTrack(
+		@QueryParam("resultOffset")	final int resultOffset, // query parameters, set search range 
+		@QueryParam("resultLimit")	final int resultLimit,
+		@QueryParam("name")	final String name
+		
+	) {
+		final EntityManager radioManager = RestJpaLifecycleProvider.entityManager("radio");
+		final TypedQuery<Long> query = radioManager.createQuery(TRACKS_FILTER_QUERY, Long.class);
+		
+		if (resultOffset>0) query.setFirstResult(resultOffset); //
+		if (resultLimit>0) query.setMaxResults(resultLimit);
+		final List<Long> references = query
+				.setParameter("lowerCreationTimestamp", null)
+				.setParameter("upperCreationTimestamp", null)
+				.setParameter("name", name)
+				.setParameter("genre", null)
+				.setParameter("artist", null)
+				.setParameter("ordinal", null)
+				.getResultList();
+		
+		final List<Track> tracks = new ArrayList<>(); // to save and check the data in the second level cache ??? 
+		for (final long reference : references) {
+			final Track track = radioManager.find(Track.class, reference);
+			if (track != null) tracks.add(track);
+		}
+		return tracks;
+	}
+	
+	
+	/**
+	 * : Returns the track-content and track-type matching the given
+	 * document ID – NOT it's JSON-Representation! Use result class "Response"
+	 * in order to set both using the track's content and content-type.
+	 **/
+	@GET
+	@Path("tracks/{id}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public BaseEntity queryTrack(@PathParam("id") @Positive final long documentIdentity) {
+		final EntityManager radioManager = RestJpaLifecycleProvider.entityManager("radio");
+		final Track requester = radioManager.find(Track.class, documentIdentity);
+		if (requester == null)
+			throw new ClientErrorException(Status.NOT_FOUND);
+
+		return requester;
+	}
+	
+	
 	/**
 	 * Returns a list person matching the given query
 	 * 
