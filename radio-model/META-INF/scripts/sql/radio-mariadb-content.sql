@@ -34,5 +34,5 @@ INSERT INTO BaseEntity VALUES (0, "Album", 1, UNIX_TIMESTAMP()*1000);
 SET @id = LAST_INSERT_ID();
 INSERT INTO Album VALUES (@id, 1, "I am Ok", 2008, 14);
 
-
 SELECT identity, discriminator, email, HEX(contentHash) from JoinedEntity;
+
