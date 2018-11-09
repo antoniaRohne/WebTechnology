@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry excluding="de/sb/radio/persistence/|de/sb/radio/rest/|src/|de/sb/radio/|de/sb/|de/" kind="src" path=""/>
-	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="src" path=""/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/eclipselink-2.6"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/hibernate-validator-6.0"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/jdbc-mariadb-2.3"/>

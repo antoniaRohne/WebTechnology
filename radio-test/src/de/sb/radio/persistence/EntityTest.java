@@ -12,7 +12,6 @@ import javax.validation.ValidatorFactory;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import de.sb.radio.persistence.BaseEntity;
 import de.sb.toolbox.Copyright;
 
 

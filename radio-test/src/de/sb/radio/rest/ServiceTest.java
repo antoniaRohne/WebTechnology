@@ -1,4 +1,4 @@
-package de.sb.messenger.rest;
+package de.sb.radio.rest;
 
 import static java.util.logging.Level.INFO;
 import java.io.BufferedReader;
