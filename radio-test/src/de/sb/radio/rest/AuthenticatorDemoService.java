@@ -1,4 +1,4 @@
-package de.sb.messenger.rest;
+package de.sb.radio.rest;
 
 import java.util.List;
 import javax.ws.rs.BadRequestException;

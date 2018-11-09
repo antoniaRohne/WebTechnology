@@ -1,4 +1,4 @@
-package de.sb.messenger.persistence;
+package de.sb.radio.persistence;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
