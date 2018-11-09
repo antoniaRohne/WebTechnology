@@ -28,6 +28,7 @@ import de.sb.radio.persistence.Album;
 import de.sb.radio.persistence.BaseEntity;
 import de.sb.radio.persistence.Document;
 import de.sb.radio.persistence.Person;
+import de.sb.radio.persistence.Track;
 import de.sb.toolbox.Copyright;
 import de.sb.toolbox.net.RestJpaLifecycleProvider;
 
@@ -92,6 +93,39 @@ public class EntityService {
 
 		return entity;
 	}
+	
+	
+	/**
+	 * Returns the entity with the given identity.
+	 * 
+	 * @param entityIdentity
+	 *            the entity identity
+	 * @return the matching entity (HTTP 200)
+	 * @throws ClientErrorException
+	 *             (HTTP 404) if the given entity cannot be found
+	 * @throws PersistenceException
+	 *             (HTTP 500) if there is a problem with the persistence layer
+	 * @throws IllegalStateException
+	 *             (HTTP 500) if the entity manager associated with the current
+	 *             thread is not open
+	 */
+	
+	@GET
+	@Path("tracks/genres")
+	@Produces(MediaType.APPLICATION_JSON)
+	public List<String> queryGenres(@PathParam("id") @Positive final long trackIdentity) {
+		final EntityManager radioManager = RestJpaLifecycleProvider.entityManager("radio");
+		final List<Track> trackList = radioManager.createNamedQuery(TRACKS_FILTER_QUERY).getResultList();
+		if (trackList.isEmpty())
+			throw new ClientErrorException(Status.NOT_FOUND);
+		
+		List<String> genres = new ArrayList<String>();
+		for(Track t : trackList) {
+			genres.add(t.getGenre());
+		}
+		return genres;	
+	}
+
 
 
 	/**
@@ -120,20 +154,52 @@ public class EntityService {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	
-	public Response addAlbum(@HeaderParam(REQUESTER_IDENTITY) @Positive final long requesterIdentity,Album template) {
+	public Response addAlbum(@HeaderParam(REQUESTER_IDENTITY) @QueryParam(coverReference) @Positive final long requesterIdentity,Album template) {
 		final EntityManager radioManager = RestJpaLifecycleProvider.entityManager("radio");
 		final Person requester = radioManager.find(Person.class, requesterIdentity);		
 		if (requester == null || requester.getGroup() != Group.ADMIN)
 			throw new ClientErrorException(FORBIDDEN);
 				
-		String result = "Str" + template + template.getIdentity();
-		return Response.status(200).entity(result).build();
+		if(requesterIdentity == 0) {
+			String result = "Str" + template + template.getIdentity();
+			return Response.status(200).entity(result).build();
+		}else {
+			Album a = radioManager.find(Album.class,requesterIdentity);
+			a = template; //update album with given data ???
+			return Response.status(200).entity(a).build();
+		}
+		
+	}
+	
 
+	/**
+	 * POST /tracks: Creates or updates a track from template data within the
+	 * HTTP request body in application/json format.
+	 */
+
+	@POST
+	@Path("/tracks")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	
+	public Response addTrack(@HeaderParam(REQUESTER_IDENTITY) @QueryParam(RECORDING_REFERENCE) @QueryParam(ownerReference) @QueryParam(albumReference) @Positive final long requesterIdentity,Track template) {
+		final EntityManager radioManager = RestJpaLifecycleProvider.entityManager("radio");
+		final Person requester = radioManager.find(Person.class, requesterIdentity);		
+		if (requester == null || requester.getGroup() != Group.ADMIN)
+			throw new ClientErrorException(FORBIDDEN);
+				
+		if(requesterIdentity == 0) {
+			String result = "Str" + template + template.getIdentity();
+			return Response.status(200).entity(result).build();
+		}else {
+			Track t = radioManager.find(Track.class,requesterIdentity);
+			t = template; //update album with given data ???
+			return Response.status(200).entity(t).build();
+		}
+		
 	}
 	
 	
-	
-	 
 
 	/**
 	 * Returns the person matching the given identity or the person matching the

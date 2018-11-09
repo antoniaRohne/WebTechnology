@@ -1,4 +1,4 @@
-package de.sb.messenger.persistence;
+package de.sb.radio.persistence;
 
 import static java.util.logging.Level.WARNING;
 import java.util.HashSet;
