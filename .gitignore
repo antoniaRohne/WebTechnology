@@ -23,5 +23,22 @@
 hs_err_pid*
 
 
+# Eclipse, shuya, see also: https://gist.github.com/chhh/4961200 #
 .metadata/
 .recommenders/
+RemoteSystemsTempFiles/
+
+*.pydevproject
+.project
+.metadata
+bin/**
+tmp/**
+tmp/**/*
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+.classpath
+.settings/
+.loadpath
