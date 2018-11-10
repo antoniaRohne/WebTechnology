@@ -18,3 +18,6 @@ public class SanityCheck {
 		System.out.println(query.getResultList());
 	}
 }
+
+
+/* synchronization test for github */
