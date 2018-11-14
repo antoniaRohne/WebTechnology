@@ -24,15 +24,47 @@ INSERT INTO Person VALUES (@id, 1, "sascha.baumeister@gmail.com", UNHEX(SHA2("sa
 
 INSERT INTO BaseEntity VALUES (0, "Album", 1, UNIX_TIMESTAMP()*1000);
 SET @id = LAST_INSERT_ID();
-INSERT INTO Album VALUES (@id, 1, "Winter", 1992, 11);
+INSERT INTO Album VALUES (@id, 1, "We Are Born", 2010, 7);
 
 INSERT INTO BaseEntity VALUES (0, "Album", 1, UNIX_TIMESTAMP()*1000);
 SET @id = LAST_INSERT_ID();
-INSERT INTO Album VALUES (@id, 1, "Autumn", 2012, 20);
+INSERT INTO Album VALUES (@id, 1, "Autumn", 2012, 9);
 
-INSERT INTO BaseEntity VALUES (0, "Album", 1, UNIX_TIMESTAMP()*1000);
+INSERT INTO BaseEntity VALUES (0, "Track", 1, UNIX_TIMESTAMP()*1000);
 SET @id = LAST_INSERT_ID();
-INSERT INTO Album VALUES (@id, 1, "I am Ok", 2008, 14);
+INSERT INTO Track VALUES (@id, 5, 2, 1,"I`m in Here", "SIA", "Pop", 1);
+
+INSERT INTO BaseEntity VALUES (0, "Track", 1, UNIX_TIMESTAMP()*1000);
+SET @id = LAST_INSERT_ID();
+INSERT INTO Track VALUES (@id, 5, 2, 1,"Back to Me", "Vanotek", "Electronic", 2);
+
+INSERT INTO BaseEntity VALUES (0, "Track", 1, UNIX_TIMESTAMP()*1000);
+SET @id = LAST_INSERT_ID();
+INSERT INTO Track VALUES (@id, 5, 2, 1,"Alive", "SIA", "Pop", 3);
+
+INSERT INTO BaseEntity VALUES (0, "Track", 1, UNIX_TIMESTAMP()*1000);
+SET @id = LAST_INSERT_ID();
+INSERT INTO Track VALUES (@id, 5, 2, 1,"Daydream", "Ash", "Poprock", 4);
+
+INSERT INTO BaseEntity VALUES (0, "Track", 1, UNIX_TIMESTAMP()*1000);
+SET @id = LAST_INSERT_ID();
+INSERT INTO Track VALUES (@id, 6, 2, 1,"Kings of cydonia", "Muse", "Rock", 1);
+
+INSERT INTO BaseEntity VALUES (0, "Track", 1, UNIX_TIMESTAMP()*1000);
+SET @id = LAST_INSERT_ID();
+INSERT INTO Track VALUES (@id, 6, 2, 1,"Nothing Else Matters", "Metallica", "Rock", 2);
+
+INSERT INTO BaseEntity VALUES (0, "Track", 1, UNIX_TIMESTAMP()*1000);
+SET @id = LAST_INSERT_ID();
+INSERT INTO Track VALUES (@id, 6, 2, 1,"Tell me who", "Vanotek", "Pop", 3);
+
+INSERT INTO BaseEntity VALUES (0, "Track", 1, UNIX_TIMESTAMP()*1000);
+SET @id = LAST_INSERT_ID();
+INSERT INTO Track VALUES (@id, 6, 2, 1,"The Scientist", "Coldplay", "Poprock", 4);
+
+INSERT INTO BaseEntity VALUES (0, "Track", 1, UNIX_TIMESTAMP()*1000);
+SET @id = LAST_INSERT_ID();
+INSERT INTO Track VALUES (@id, 6, 2, 1,"The Nights", "Avicii", "Electronic", 5);
 
 SELECT identity, discriminator, email, HEX(contentHash) from JoinedEntity;
 
