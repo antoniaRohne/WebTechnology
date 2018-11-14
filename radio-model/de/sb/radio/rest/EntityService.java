@@ -61,7 +61,7 @@ public class EntityService {
 			+ "(:releaseYear is null or a.releaseYear = :releaseYear) and "
 			+ "(:trackCount is null or a.trackCount = :trackCount) ";
 
-	static private final String TRACKS_FILTER_QUERY = "select t.identity from Tracks as t where "
+	static private final String TRACKS_FILTER_QUERY = "select t.identity from Track as t where "
 			+ "(:lowerCreationTimestamp is null or t.creationTimestamp >= :lowerCreationTimestamp) and  "
 			+ "(:upperCreationTimestamp is null or t.creationTimestamp <= :upperCreationTimestamp) and"
 			+ "(:name is null or t.name = :name) and" 
