@@ -1,5 +1,7 @@
 package de.sb.radio.rest;
 
+import static de.sb.radio.rest.BasicAuthenticationFilter.REQUESTER_IDENTITY;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,12 +24,11 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import org.eclipse.persistence.internal.oxm.schema.model.Group;
-
 import de.sb.radio.persistence.Album;
 import de.sb.radio.persistence.BaseEntity;
 import de.sb.radio.persistence.Document;
 import de.sb.radio.persistence.Person;
+import de.sb.radio.persistence.Person.Group;
 import de.sb.radio.persistence.Track;
 import de.sb.toolbox.Copyright;
 import de.sb.toolbox.net.RestJpaLifecycleProvider;
@@ -154,11 +155,11 @@ public class EntityService {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	
-	public Response addAlbum(@HeaderParam(REQUESTER_IDENTITY) @QueryParam(coverReference) @Positive final long requesterIdentity,Album template) {
+	public Response addAlbum(@HeaderParam(REQUESTER_IDENTITY) @Positive final long requesterIdentity,Album template) {
 		final EntityManager radioManager = RestJpaLifecycleProvider.entityManager("radio");
 		final Person requester = radioManager.find(Person.class, requesterIdentity);		
 		if (requester == null || requester.getGroup() != Group.ADMIN)
-			throw new ClientErrorException(FORBIDDEN);
+			throw new ClientErrorException(Status.FORBIDDEN);
 				
 		if(requesterIdentity == 0) {
 			String result = "Str" + template + template.getIdentity();
@@ -182,11 +183,11 @@ public class EntityService {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	
-	public Response addTrack(@HeaderParam(REQUESTER_IDENTITY) @QueryParam(RECORDING_REFERENCE) @QueryParam(ownerReference) @QueryParam(albumReference) @Positive final long requesterIdentity,Track template) {
+	public Response addTrack(@HeaderParam(REQUESTER_IDENTITY) @Positive final long requesterIdentity,Track template) {
 		final EntityManager radioManager = RestJpaLifecycleProvider.entityManager("radio");
 		final Person requester = radioManager.find(Person.class, requesterIdentity);		
 		if (requester == null || requester.getGroup() != Group.ADMIN)
-			throw new ClientErrorException(FORBIDDEN);
+			throw new ClientErrorException(Status.FORBIDDEN);
 				
 		if(requesterIdentity == 0) {
 			String result = "Str" + template + template.getIdentity();
@@ -237,7 +238,8 @@ public class EntityService {
 	public List<Person> queryPerson(
 		@QueryParam("resultOffset")	final int resultOffset, // query parameters, set search range 
 		@QueryParam("resultLimit")	final int resultLimit,
-		@QueryParam("email") final String email // search by email 
+		@QueryParam("email") final String email, // search by email 
+		@QueryParam("forename") final String forename
 	) {
 		final EntityManager radioManager = RestJpaLifecycleProvider.entityManager("radio");
 		final TypedQuery<Long> query = radioManager.createQuery(PERSON_FILTER_QUERY, Long.class);
@@ -248,7 +250,7 @@ public class EntityService {
 				.setParameter("lowerCreationTimestamp", null)
 				.setParameter("upperCreationTimestamp", null)
 				.setParameter("email", email)
-				.setParameter("givenName", null)
+				.setParameter("givenName", forename)
 				.setParameter("familyName", null)
 				.getResultList();
 		
@@ -570,7 +572,7 @@ public class EntityService {
 		final EntityManager radioManager = RestJpaLifecycleProvider.entityManager("radio");
 		final Person requester = radioManager.find(Person.class, requesterIdentity);
 		if (requester == null || requester.getGroup() != Group.ADMIN)
-			throw new ClientErrorException(FORBIDDEN);
+			throw new ClientErrorException(Status.FORBIDDEN);
 
 		final BaseEntity entity = radioManager.find(BaseEntity.class, entityIdentity);
 		if (entity == null)
