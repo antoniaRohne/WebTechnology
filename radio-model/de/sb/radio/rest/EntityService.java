@@ -61,7 +61,7 @@ public class EntityService {
 			+ "(:releaseYear is null or a.releaseYear = :releaseYear) and "
 			+ "(:trackCount is null or a.trackCount = :trackCount) ";
 
-	static private final String TRACKS_FILTER_QUERY = "select t.identity from Tracks as t where "
+	static private final String TRACKS_FILTER_QUERY = "select t.identity from Track as t where "
 			+ "(:lowerCreationTimestamp is null or t.creationTimestamp >= :lowerCreationTimestamp) and  "
 			+ "(:upperCreationTimestamp is null or t.creationTimestamp <= :upperCreationTimestamp) and"
 			+ "(:name is null or t.name = :name) and" 
@@ -122,6 +122,7 @@ public class EntityService {
 		
 		List<String> genres = new ArrayList<String>();
 		for(Track t : trackList) {
+			if(!genres.contains(t.getGenre()))
 			genres.add(t.getGenre());
 		}
 		return genres;	
@@ -153,24 +154,48 @@ public class EntityService {
 	@POST
 	@Path("/albums")
 	@Consumes(MediaType.APPLICATION_JSON)
-	@Produces(MediaType.APPLICATION_JSON)
-	
-	public Response addAlbum(@HeaderParam(REQUESTER_IDENTITY) @Positive final long requesterIdentity,Album template) {
+	@Produces(MediaType.TEXT_PLAIN)
+	public long addOrModifyAlbum(
+			@HeaderParam(REQUESTER_IDENTITY) @Positive final long requesterIdentity,
+			@QueryParam("coverReference") final long coverReference,
+			Album template
+	) {
 		final EntityManager radioManager = RestJpaLifecycleProvider.entityManager("radio");
 		final Person requester = radioManager.find(Person.class, requesterIdentity);		
 		if (requester == null || requester.getGroup() != Group.ADMIN)
 			throw new ClientErrorException(Status.FORBIDDEN);
-				
-		if(requesterIdentity == 0) {
-			String result = "Str" + template + template.getIdentity();
-			return Response.status(200).entity(result).build();
-		}else {
-			Album a = radioManager.find(Album.class,requesterIdentity);
-			a = template; //update album with given data ???
-			return Response.status(200).entity(a).build();
+		
+		final boolean insert = requesterIdentity == 0; 
+		final Album album;  
+
+		if(insert) {
+			final Document cover = radioManager.find(Document.class,coverReference);
+			album = new Album(cover);
+		} else {
+			album = radioManager.find(Album.class,template.getIdentity());
+			if(album == null) throw new ClientErrorException(Status.NOT_FOUND);
+		}
+
+		album.setReleaseYear(template.getReleaseYear());
+		//weitere Setter
+		
+		if(insert) {
+			radioManager.persist(album);
+		} else {
+			radioManager.flush();
 		}
 		
+		try {
+			radioManager.getTransaction().commit();
+		} catch (PersistenceException e) {
+			throw new ClientErrorException(Status.CONFLICT);
+		} finally {
+			radioManager.getTransaction().begin();
+		}
+		
+		return album.getIdentity();
 	}
+		
 	
 
 	/**

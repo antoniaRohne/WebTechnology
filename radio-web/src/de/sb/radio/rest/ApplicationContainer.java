@@ -121,7 +121,6 @@ public class ApplicationContainer {
 		}
 	}
 
-
 	/**
 	 * Returns a new SSL context based on a JKS key store and the most recent supported transport layer security (TLS) version.
 	 * @param keyStoreFile the key store file path, or {@code null} for none
