@@ -13,6 +13,7 @@
 
 		<script src="js/controller.js"></script>
 		<script src="js/welcome-controller.js"></script>
+        <script src="js/server-radio-controller.js"></script>
 
 		<template id="login-template">
 			<section class="login">
@@ -28,6 +29,24 @@
 					</div>
 				</fieldset>
 				<button type="button">login</button>
+			</section>
+		</template>
+        
+        <template id="server-radio-template">
+			<section class="genreFilter">
+            <fieldset>
+                <label class ="horizontal"> Genre </label> 
+                <input type="checkbox"> 
+                <label class ="horizontal"> Genre </label> 
+                <input type="checkbox"> 
+                <label class ="horizontal"> Genre </label> 
+                <input type="checkbox"> 
+            </fieldset>
+            </section>
+            
+            <button type="button">Search</button>
+            <section class="selection">
+				
 			</section>
 		</template>
 	</head>

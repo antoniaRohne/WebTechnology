@@ -122,6 +122,7 @@ public class EntityService {
 		
 		List<String> genres = new ArrayList<String>();
 		for(Track t : trackList) {
+			if(!genres.contains(t.getGenre()))
 			genres.add(t.getGenre());
 		}
 		return genres;	
