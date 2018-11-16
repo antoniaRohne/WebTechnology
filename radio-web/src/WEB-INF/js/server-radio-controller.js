@@ -26,13 +26,12 @@
 		enumerable: false,
 		configurable: false,
 		writable: true,
-		value: asyn function () {
-            this.displayError();
+		value: async function () {
+			this.displayError();
         
             try{
-                Controller.sessionOwner = JSON.parse(await this.xhr("/services/tracks/genres", "GET", {"Accept": "application/json"}, "", "text", email, password));
-
-				document.querySelector("header li:last-of-type > a").dispatchEvent(new MouseEvent("click")); 
+               //JSON.parse(await this.xhr("/services/tracks/genres", "GET", {"Accept": "application/json"}, "", "text", Controller.sessionOwner.email, Controller.sessionOwner.password));
+            	var genres = JSON.parse(await this.xhr("/services/tracks/genres", "GET", {"Accept": "application/json"}, "", "text", "ines.bergmann@web.de", "ines")); 
 			} catch (error) {
 				this.displayError(error);
 			}
@@ -40,6 +39,14 @@
 			const mainElement = document.querySelector("main");
 			mainElement.appendChild(document.querySelector("#server-radio-template").content.cloneNode(true).firstElementChild);
 			mainElement.querySelector("button").addEventListener("click", event => this.search());
+			
+			var labels = mainElement.querySelectorAll(".horizontal");
+			var checkboxes = document.querySelectorAll("input[type='checkbox']");
+			
+			for(let i=0; i<genres.length;i++){
+				labels[i+2].innerHTML= genres[i];
+				checkboxes[i].id = genres[i];
+			}
 		}
 	});
 
@@ -54,20 +61,30 @@
 			this.displayError();
 
 			try {
-				var inputs;
-                document.querySelectorAll("input[type='checkbox']");
-                for(var i = 0; i < inputs.length; i++) {
-                inputs[i].checked = true;   
+				var checkboxes = document.querySelectorAll("input[type='checkbox']");
+				var searchedGenres = "";
+                for(var i = 0; i < checkboxes.length; i++) {
+                	if(checkboxes[i].checked == true){
+                		searchedGenres+="genre="+checkboxes[i].id+"&";
+                	}
                 }
-
-
+                	
+                searchedGenres = searchedGenres.slice(0, -1);
+           
+                console.log (searchedGenres);
 				// Although fetch() supports sending credentials from a browser's hidden Basic-Auth credentials store, it lacks
 				// support for storing them securely. This workaround uses a classic XMLHttpRequest invocation as a workaround.
-				Controller.sessionOwner = JSON.parse(await this.xhr("/services/tracks?genre=inputs", "GET", {"Accept": "application/json"}, "", "text", email, password));
-
-				document.querySelector("header li:last-of-type > a").dispatchEvent(new MouseEvent("click")); 
+				var tracks = JSON.parse(await this.xhr("/services/tracks?"+searchedGenres, "GET", {"Accept": "application/json"}, "", "text", "ines.bergmann@web.de", "ines"));
+				
+				console.log(tracks);
+				
 			} catch (error) {
 				this.displayError(error);
+			}
+			
+			let listOfTracks = document.getElementById("listOfTracks");
+			for(let track in tracks){
+				listOfTracks.innerHTML += track+ " ";
 			}
 		}
 	});

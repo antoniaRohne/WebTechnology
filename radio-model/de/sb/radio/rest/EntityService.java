@@ -68,7 +68,6 @@ public class EntityService {
 			+ "(:artist is null or t.artist = :artist) and "
 			+ "(:genre is null or t.genre = :genre) and " 
 			+ "(:ordinal is null or t.ordinal = :ordinal)";
-
 	/**
 	 * Returns the entity with the given identity.
 	 * 
@@ -111,7 +110,7 @@ public class EntityService {
 	 *             thread is not open
 	 */
 	
-	@GET
+	/*@GET
 	@Path("tracks/genres")
 	@Produces(MediaType.APPLICATION_JSON)
 	public List<String> queryGenres(@PathParam("id") @Positive final long trackIdentity) {
@@ -126,7 +125,7 @@ public class EntityService {
 			genres.add(t.getGenre());
 		}
 		return genres;	
-	}
+	}*/
 
 	/**GET method to get all existed genres**/
 	@GET
@@ -138,6 +137,12 @@ public class EntityService {
 		final TypedQuery<Long> query = radioManager.createQuery(TRACKS_FILTER_QUERY, Long.class);
 		
 		final List<Long> references = query
+				.setParameter("lowerCreationTimestamp", null)
+				.setParameter("upperCreationTimestamp", null)
+				.setParameter("name", null)
+				.setParameter("artist", null)
+				.setParameter("genre", null)
+				.setParameter("ordinal", null)
 				.getResultList();
 		
 		final List<Track> tracks = new ArrayList<>(); 
@@ -414,7 +419,8 @@ public class EntityService {
 	public List<Track> queryTrack(
 		@QueryParam("resultOffset")	final int resultOffset, // query parameters, set search range 
 		@QueryParam("resultLimit")	final int resultLimit,
-		@QueryParam("name")	final String name
+		@QueryParam("name")	final String name,
+		@QueryParam("genre") final List<String> genre
 		
 	) {
 		final EntityManager radioManager = RestJpaLifecycleProvider.entityManager("radio");
@@ -425,8 +431,8 @@ public class EntityService {
 		final List<Long> references = query
 				.setParameter("lowerCreationTimestamp", null)
 				.setParameter("upperCreationTimestamp", null)
-				.setParameter("name", name)
-				.setParameter("genre", null)
+				.setParameter("name", null)
+				.setParameter("genre", genre)
 				.setParameter("artist", null)
 				.setParameter("ordinal", null)
 				.getResultList();
