@@ -83,8 +83,10 @@
 			}
 			
 			let listOfTracks = document.getElementById("listOfTracks");
-			for(let track in tracks){
-				listOfTracks.innerHTML += track.name+ " ";
+			for(let track of tracks){
+				  var li = document.createElement("li");
+				  li.appendChild(document.createTextNode(track.name));
+				  listOfTracks.appendChild(li);
 			}
 		}
 	});
