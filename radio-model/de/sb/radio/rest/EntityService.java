@@ -118,6 +118,35 @@ public class EntityService {
 		return genres;
 	}
 
+<<<<<<< HEAD
+=======
+	/**GET method to get all existed genres**/
+	@GET
+	@Path("tracks/genres")
+	@Produces(MediaType.APPLICATION_JSON)
+	public List<String> queryGenres() {
+		
+		final EntityManager radioManager = RestJpaLifecycleProvider.entityManager("radio");
+		final TypedQuery<Long> query = radioManager.createQuery(TRACKS_FILTER_QUERY, Long.class);
+		
+		final List<Long> references = query
+				.getResultList();
+		
+		final List<Track> tracks = new ArrayList<>(); 
+		for (final long reference : references) {
+			final Track track = radioManager.find(Track.class, reference);
+			if (track != null) tracks.add(track);
+		}
+		
+		List<String> genres = new ArrayList<String>();
+		for(Track t : tracks) {
+			if(!genres.contains(t.getGenre()))
+			genres.add(t.getGenre());
+		}
+		return genres;	
+	}
+
+>>>>>>> 93943765965331c764b99c799854dfb38871298e
 	/**
 	 * POST /people: Creates or updates a person from template data within the HTTP
 	 * request body in application/json format.
