@@ -63,17 +63,10 @@ public class EntityService {
 	static private final String TRACKS_FILTER_QUERY = "select t.identity from Track as t where "
 			+ "(:lowerCreationTimestamp is null or t.creationTimestamp >= :lowerCreationTimestamp) and  "
 			+ "(:upperCreationTimestamp is null or t.creationTimestamp <= :upperCreationTimestamp) and"
-<<<<<<< HEAD
-			+ "(:name is null or t.name = :name) and" + "(:artist is null or t.artist = :artist) and "
-			+ "(:genre is null or t.genre = :genre) and " + "(:ordinal is null or t.ordinal = :ordinal)";
-
-=======
 			+ "(:name is null or t.name = :name) and" 
 			+ "(:artist is null or t.artist = :artist) and "
 			+ "(:genre is null or t.genre = :genre) and " 
-			+ "(:ordinal is null or t.ordinal = :ordinal)";
->>>>>>> 72c929fdcfe29d92164bb167655ff58aa9cc5a38
-	/**
+			+ "(:ordinal is null or t.ordinal = :ordinal)";	/**
 	 * Returns the entity with the given identity.
 	 * 
 	 * @param entityIdentity the entity identity
@@ -107,13 +100,7 @@ public class EntityService {
 	 * @throws IllegalStateException (HTTP 500) if the entity manager associated
 	 *                               with the current thread is not open
 	 */
-<<<<<<< HEAD
-
-	@GET
-=======
-	
 	/*@GET
->>>>>>> 72c929fdcfe29d92164bb167655ff58aa9cc5a38
 	@Path("tracks/genres")
 	@Produces(MediaType.APPLICATION_JSON)
 	public List<String> queryGenres(@PathParam("id") @Positive final long trackIdentity) {
@@ -127,16 +114,8 @@ public class EntityService {
 			if (!genres.contains(t.getGenre()))
 				genres.add(t.getGenre());
 		}
-<<<<<<< HEAD
-		return genres;
-	}
-=======
 		return genres;	
 	}*/
->>>>>>> 72c929fdcfe29d92164bb167655ff58aa9cc5a38
-
-<<<<<<< HEAD
-=======
 	/**GET method to get all existed genres**/
 	@GET
 	@Path("tracks/genres")
@@ -169,7 +148,6 @@ public class EntityService {
 		return genres;	
 	}
 
->>>>>>> 93943765965331c764b99c799854dfb38871298e
 	/**
 	 * POST /people: Creates or updates a person from template data within the HTTP
 	 * request body in application/json format.
@@ -404,25 +382,6 @@ public class EntityService {
 	@GET
 	@Path("tracks")
 	@Produces(MediaType.APPLICATION_JSON)
-<<<<<<< HEAD
-	public List<Track> queryTrack(@QueryParam("resultOffset") final int resultOffset, // query parameters, set search
-																						// range
-			@QueryParam("resultLimit") final int resultLimit, @QueryParam("name") final String name
-
-	) {
-		final EntityManager radioManager = RestJpaLifecycleProvider.entityManager("radio");
-		final TypedQuery<Long> query = radioManager.createQuery(TRACKS_FILTER_QUERY, Long.class);
-
-		if (resultOffset > 0)
-			query.setFirstResult(resultOffset); //
-		if (resultLimit > 0)
-			query.setMaxResults(resultLimit);
-		final List<Long> references = query.setParameter("lowerCreationTimestamp", null)
-				.setParameter("upperCreationTimestamp", null).setParameter("name", name).setParameter("genre", null)
-				.setParameter("artist", null).setParameter("ordinal", null).getResultList();
-
-		final List<Track> tracks = new ArrayList<>(); // to save and check the data in the second level cache ???
-=======
 	public List<Track> queryTrack(
 		@QueryParam("resultOffset")	final int resultOffset, // query parameters, set search range 
 		@QueryParam("resultLimit")	final int resultLimit,
@@ -445,7 +404,6 @@ public class EntityService {
 				.getResultList();
 		
 		final List<Track> tracks = new ArrayList<>(); // to save and check the data in the second level cache ??? 
->>>>>>> 72c929fdcfe29d92164bb167655ff58aa9cc5a38
 		for (final long reference : references) {
 			final Track track = radioManager.find(Track.class, reference);
 			if (track != null)
