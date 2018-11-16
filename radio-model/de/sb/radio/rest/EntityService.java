@@ -50,8 +50,7 @@ public class EntityService {
 	static private final String PERSON_FILTER_QUERY = "select p.identity from Person as p where "
 			+ "(:lowerCreationTimestamp is null or p.creationTimestamp >= :lowerCreationTimestamp) and "
 			+ "(:upperCreationTimestamp is null or p.creationTimestamp <= :upperCreationTimestamp) and "
-			+ "(:email is null or p.email = :email) and "
-			+ "(:givenName is null or p.surname = :givenName) and "
+			+ "(:email is null or p.email = :email) and " + "(:givenName is null or p.surname = :givenName) and "
 			+ "(:familyName is null or p.forename = :familyName) ";
 
 	static private final String ALBUM_FILTER_QUERY = "select a.identity from Album as a where "
@@ -64,24 +63,19 @@ public class EntityService {
 	static private final String TRACKS_FILTER_QUERY = "select t.identity from Track as t where "
 			+ "(:lowerCreationTimestamp is null or t.creationTimestamp >= :lowerCreationTimestamp) and  "
 			+ "(:upperCreationTimestamp is null or t.creationTimestamp <= :upperCreationTimestamp) and"
-			+ "(:name is null or t.name = :name) and" 
-			+ "(:artist is null or t.artist = :artist) and "
-			+ "(:genre is null or t.genre = :genre) and " 
-			+ "(:ordinal is null or t.ordinal = :ordinal)";
+			+ "(:name is null or t.name = :name) and" + "(:artist is null or t.artist = :artist) and "
+			+ "(:genre is null or t.genre = :genre) and " + "(:ordinal is null or t.ordinal = :ordinal)";
 
 	/**
 	 * Returns the entity with the given identity.
 	 * 
-	 * @param entityIdentity
-	 *            the entity identity
+	 * @param entityIdentity the entity identity
 	 * @return the matching entity (HTTP 200)
-	 * @throws ClientErrorException
-	 *             (HTTP 404) if the given entity cannot be found
-	 * @throws PersistenceException
-	 *             (HTTP 500) if there is a problem with the persistence layer
-	 * @throws IllegalStateException
-	 *             (HTTP 500) if the entity manager associated with the current
-	 *             thread is not open
+	 * @throws ClientErrorException  (HTTP 404) if the given entity cannot be found
+	 * @throws PersistenceException  (HTTP 500) if there is a problem with the
+	 *                               persistence layer
+	 * @throws IllegalStateException (HTTP 500) if the entity manager associated
+	 *                               with the current thread is not open
 	 */
 	@GET
 	@Path("entities/{id}")
@@ -94,23 +88,19 @@ public class EntityService {
 
 		return entity;
 	}
-	
-	
+
 	/**
 	 * Returns the entity with the given identity.
 	 * 
-	 * @param entityIdentity
-	 *            the entity identity
+	 * @param entityIdentity the entity identity
 	 * @return the matching entity (HTTP 200)
-	 * @throws ClientErrorException
-	 *             (HTTP 404) if the given entity cannot be found
-	 * @throws PersistenceException
-	 *             (HTTP 500) if there is a problem with the persistence layer
-	 * @throws IllegalStateException
-	 *             (HTTP 500) if the entity manager associated with the current
-	 *             thread is not open
+	 * @throws ClientErrorException  (HTTP 404) if the given entity cannot be found
+	 * @throws PersistenceException  (HTTP 500) if there is a problem with the
+	 *                               persistence layer
+	 * @throws IllegalStateException (HTTP 500) if the entity manager associated
+	 *                               with the current thread is not open
 	 */
-	
+
 	@GET
 	@Path("tracks/genres")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -119,20 +109,18 @@ public class EntityService {
 		final List<Track> trackList = radioManager.createNamedQuery(TRACKS_FILTER_QUERY).getResultList();
 		if (trackList.isEmpty())
 			throw new ClientErrorException(Status.NOT_FOUND);
-		
+
 		List<String> genres = new ArrayList<String>();
-		for(Track t : trackList) {
-			if(!genres.contains(t.getGenre()))
-			genres.add(t.getGenre());
+		for (Track t : trackList) {
+			if (!genres.contains(t.getGenre()))
+				genres.add(t.getGenre());
 		}
-		return genres;	
+		return genres;
 	}
 
-
-
 	/**
-	 * POST /people: Creates or updates a person from template data within the
-	 * HTTP request body in application/json format.
+	 * POST /people: Creates or updates a person from template data within the HTTP
+	 * request body in application/json format.
 	 */
 
 	@POST
@@ -145,46 +133,44 @@ public class EntityService {
 		return Response.status(200).entity(result).build();
 
 	}
-	
+
 	/**
-	 * POST /albums: Creates or updates a album from template data within the
-	 * HTTP request body in application/json format.
+	 * POST /albums: Creates or updates a album from template data within the HTTP
+	 * request body in application/json format.
 	 */
 
 	@POST
 	@Path("/albums")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.TEXT_PLAIN)
-	public long addOrModifyAlbum(
-			@HeaderParam(REQUESTER_IDENTITY) @Positive final long requesterIdentity,
-			@QueryParam("coverReference") final long coverReference,
-			Album template
-	) {
+	public long addOrModifyAlbum(@HeaderParam(REQUESTER_IDENTITY) @Positive final long requesterIdentity,
+			@QueryParam("coverReference") final long coverReference, Album template) {
 		final EntityManager radioManager = RestJpaLifecycleProvider.entityManager("radio");
-		final Person requester = radioManager.find(Person.class, requesterIdentity);		
+		final Person requester = radioManager.find(Person.class, requesterIdentity);
 		if (requester == null || requester.getGroup() != Group.ADMIN)
 			throw new ClientErrorException(Status.FORBIDDEN);
-		
-		final boolean insert = requesterIdentity == 0; 
-		final Album album;  
 
-		if(insert) {
-			final Document cover = radioManager.find(Document.class,coverReference);
+		final boolean insert = requesterIdentity == 0;
+		final Album album;
+
+		if (insert) {
+			final Document cover = radioManager.find(Document.class, coverReference);
 			album = new Album(cover);
 		} else {
-			album = radioManager.find(Album.class,template.getIdentity());
-			if(album == null) throw new ClientErrorException(Status.NOT_FOUND);
+			album = radioManager.find(Album.class, template.getIdentity());
+			if (album == null)
+				throw new ClientErrorException(Status.NOT_FOUND);
 		}
 
 		album.setReleaseYear(template.getReleaseYear());
-		//weitere Setter
-		
-		if(insert) {
+		// weitere Setter
+
+		if (insert) {
 			radioManager.persist(album);
 		} else {
 			radioManager.flush();
 		}
-		
+
 		try {
 			radioManager.getTransaction().commit();
 		} catch (PersistenceException e) {
@@ -192,40 +178,36 @@ public class EntityService {
 		} finally {
 			radioManager.getTransaction().begin();
 		}
-		
+
 		return album.getIdentity();
 	}
-		
-	
 
 	/**
-	 * POST /tracks: Creates or updates a track from template data within the
-	 * HTTP request body in application/json format.
+	 * POST /tracks: Creates or updates a track from template data within the HTTP
+	 * request body in application/json format.
 	 */
 
 	@POST
 	@Path("/tracks")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	
-	public Response addTrack(@HeaderParam(REQUESTER_IDENTITY) @Positive final long requesterIdentity,Track template) {
+
+	public Response addTrack(@HeaderParam(REQUESTER_IDENTITY) @Positive final long requesterIdentity, Track template) {
 		final EntityManager radioManager = RestJpaLifecycleProvider.entityManager("radio");
-		final Person requester = radioManager.find(Person.class, requesterIdentity);		
+		final Person requester = radioManager.find(Person.class, requesterIdentity);
 		if (requester == null || requester.getGroup() != Group.ADMIN)
 			throw new ClientErrorException(Status.FORBIDDEN);
-				
-		if(requesterIdentity == 0) {
+
+		if (requesterIdentity == 0) {
 			String result = "Str" + template + template.getIdentity();
 			return Response.status(200).entity(result).build();
-		}else {
-			Track t = radioManager.find(Track.class,requesterIdentity);
-			t = template; //update album with given data ???
+		} else {
+			Track t = radioManager.find(Track.class, requesterIdentity);
+			t = template; // update album with given data ???
 			return Response.status(200).entity(t).build();
 		}
-		
+
 	}
-	
-	
 
 	/**
 	 * Returns the person matching the given identity or the person matching the
@@ -246,51 +228,46 @@ public class EntityService {
 	/**
 	 * Returns a list person matching the given query
 	 * 
-	 * @param personIdentity
-	 *            the person identity
+	 * @param personIdentity the person identity
 	 * @return the matching list of people (HTTP 200)
-	 * @throws ClientErrorException
-	 *             (HTTP 404) if the no person is found
-	 * @throws PersistenceException
-	 *             (HTTP 500) if there is a problem with the persistence layer
-	 * @throws IllegalStateException
-	 *             (HTTP 500) if the entity manager associated with the current
-	 *             thread is not open
+	 * @throws ClientErrorException  (HTTP 404) if the no person is found
+	 * @throws PersistenceException  (HTTP 500) if there is a problem with the
+	 *                               persistence layer
+	 * @throws IllegalStateException (HTTP 500) if the entity manager associated
+	 *                               with the current thread is not open
 	 */
 	@GET
 	@Path("people")
 	@Produces(MediaType.APPLICATION_JSON)
-	public List<Person> queryPerson(
-		@QueryParam("resultOffset")	final int resultOffset, // query parameters, set search range 
-		@QueryParam("resultLimit")	final int resultLimit,
-		@QueryParam("email") final String email, // search by email 
-		@QueryParam("forename") final String forename
-	) {
+	public List<Person> queryPerson(@QueryParam("resultOffset") final int resultOffset, // query parameters, set search
+																						// range
+			@QueryParam("resultLimit") final int resultLimit, @QueryParam("email") final String email, // search by
+																										// email
+			@QueryParam("forename") final String forename) {
 		final EntityManager radioManager = RestJpaLifecycleProvider.entityManager("radio");
 		final TypedQuery<Long> query = radioManager.createQuery(PERSON_FILTER_QUERY, Long.class);
-		
-		if (resultOffset>0) query.setFirstResult(resultOffset); //
-		if (resultLimit>0) query.setMaxResults(resultLimit);
-		final List<Long> references = query
-				.setParameter("lowerCreationTimestamp", null)
-				.setParameter("upperCreationTimestamp", null)
-				.setParameter("email", email)
-				.setParameter("givenName", forename)
-				.setParameter("familyName", null)
-				.getResultList();
-		
-		final List<Person> people = new ArrayList<>(); // to save and check the data in the second level cache ??? 
+
+		if (resultOffset > 0)
+			query.setFirstResult(resultOffset); //
+		if (resultLimit > 0)
+			query.setMaxResults(resultLimit);
+		final List<Long> references = query.setParameter("lowerCreationTimestamp", null)
+				.setParameter("upperCreationTimestamp", null).setParameter("email", email)
+				.setParameter("givenName", forename).setParameter("familyName", null).getResultList();
+
+		final List<Person> people = new ArrayList<>(); // to save and check the data in the second level cache ???
 		for (final long reference : references) {
 			final Person person = radioManager.find(Person.class, reference);
-			if (person != null) people.add(person);
+			if (person != null)
+				people.add(person);
 		}
 		return people;
 	}
 
 	/**
-	 * : Returns the document-content and document-type matching the given
-	 * document ID â€“ NOT it's JSON-Representation! Use result class "Response"
-	 * in order to set both using the document's content and content-type.
+	 * : Returns the document-content and document-type matching the given document
+	 * ID â€“ NOT it's JSON-Representation! Use result class "Response" in
+	 * order to set both using the document's content and content-type.
 	 **/
 	@GET
 	@Path("document/{id}")
@@ -303,56 +280,50 @@ public class EntityService {
 
 		return requester;
 	}
-	
-	
+
 	/**
 	 * Returns a list albums matching the given query
 	 * 
-	 * @param albumIdentity
-	 *            the album identity
+	 * @param albumIdentity the album identity
 	 * @return the matching list of albums (HTTP 200)
-	 * @throws ClientErrorException
-	 *             (HTTP 404) if the no album is found
-	 * @throws PersistenceException
-	 *             (HTTP 500) if there is a problem with the persistence layer
-	 * @throws IllegalStateException
-	 *             (HTTP 500) if the entity manager associated with the current
-	 *             thread is not open
+	 * @throws ClientErrorException  (HTTP 404) if the no album is found
+	 * @throws PersistenceException  (HTTP 500) if there is a problem with the
+	 *                               persistence layer
+	 * @throws IllegalStateException (HTTP 500) if the entity manager associated
+	 *                               with the current thread is not open
 	 */
-	
+
 	@GET
 	@Path("albums")
 	@Produces(MediaType.APPLICATION_JSON)
-	public List<Album> queryAlbum(
-		@QueryParam("resultOffset")	final int resultOffset, // query parameters, set search range 
-		@QueryParam("resultLimit")	final int resultLimit,
-		@QueryParam("title") final String title // search by title 
+	public List<Album> queryAlbum(@QueryParam("resultOffset") final int resultOffset, // query parameters, set search
+																						// range
+			@QueryParam("resultLimit") final int resultLimit, @QueryParam("title") final String title // search by title
 	) {
 		final EntityManager radioManager = RestJpaLifecycleProvider.entityManager("radio");
 		final TypedQuery<Long> query = radioManager.createQuery(ALBUM_FILTER_QUERY, Long.class);
-		
-		if (resultOffset>0) query.setFirstResult(resultOffset); //
-		if (resultLimit>0) query.setMaxResults(resultLimit);
-		final List<Long> references = query
-				.setParameter("lowerCreationTimestamp", null)
-				.setParameter("upperCreationTimestamp", null)
-				.setParameter("title", title)
-				.setParameter("releaseYear", null)
-				.setParameter("trackCount", null)
-				.getResultList();
-		
-		final List<Album> albums = new ArrayList<>(); // to save and check the data in the second level cache ??? 
+
+		if (resultOffset > 0)
+			query.setFirstResult(resultOffset); //
+		if (resultLimit > 0)
+			query.setMaxResults(resultLimit);
+		final List<Long> references = query.setParameter("lowerCreationTimestamp", null)
+				.setParameter("upperCreationTimestamp", null).setParameter("title", title)
+				.setParameter("releaseYear", null).setParameter("trackCount", null).getResultList();
+
+		final List<Album> albums = new ArrayList<>(); // to save and check the data in the second level cache ???
 		for (final long reference : references) {
 			final Album album = radioManager.find(Album.class, reference);
-			if (album != null) albums.add(album);
+			if (album != null)
+				albums.add(album);
 		}
 		return albums;
 	}
-	
+
 	/**
-	 * : Returns the album-content and album-type matching the given
-	 * document ID – NOT it's JSON-Representation! Use result class "Response"
-	 * in order to set both using the album's content and content-type.
+	 * : Returns the album-content and album-type matching the given document ID –
+	 * NOT it's JSON-Representation! Use result class "Response" in order to set
+	 * both using the album's content and content-type.
 	 **/
 	@GET
 	@Path("albums/{id}")
@@ -365,61 +336,51 @@ public class EntityService {
 
 		return requester;
 	}
-	
-	
-	
-	
+
 	/**
 	 * Returns a list tracks matching the given query
 	 * 
-	 * @param albumIdentity
-	 *            the track identity
+	 * @param albumIdentity the track identity
 	 * @return the matching list of track (HTTP 200)
-	 * @throws ClientErrorException
-	 *             (HTTP 404) if the no tracks is found
-	 * @throws PersistenceException
-	 *             (HTTP 500) if there is a problem with the persistence layer
-	 * @throws IllegalStateException
-	 *             (HTTP 500) if the entity manager associated with the current
-	 *             thread is not open
+	 * @throws ClientErrorException  (HTTP 404) if the no tracks is found
+	 * @throws PersistenceException  (HTTP 500) if there is a problem with the
+	 *                               persistence layer
+	 * @throws IllegalStateException (HTTP 500) if the entity manager associated
+	 *                               with the current thread is not open
 	 */
-	
+
 	@GET
 	@Path("tracks")
 	@Produces(MediaType.APPLICATION_JSON)
-	public List<Track> queryTrack(
-		@QueryParam("resultOffset")	final int resultOffset, // query parameters, set search range 
-		@QueryParam("resultLimit")	final int resultLimit,
-		@QueryParam("name")	final String name
-		
+	public List<Track> queryTrack(@QueryParam("resultOffset") final int resultOffset, // query parameters, set search
+																						// range
+			@QueryParam("resultLimit") final int resultLimit, @QueryParam("name") final String name
+
 	) {
 		final EntityManager radioManager = RestJpaLifecycleProvider.entityManager("radio");
 		final TypedQuery<Long> query = radioManager.createQuery(TRACKS_FILTER_QUERY, Long.class);
-		
-		if (resultOffset>0) query.setFirstResult(resultOffset); //
-		if (resultLimit>0) query.setMaxResults(resultLimit);
-		final List<Long> references = query
-				.setParameter("lowerCreationTimestamp", null)
-				.setParameter("upperCreationTimestamp", null)
-				.setParameter("name", name)
-				.setParameter("genre", null)
-				.setParameter("artist", null)
-				.setParameter("ordinal", null)
-				.getResultList();
-		
-		final List<Track> tracks = new ArrayList<>(); // to save and check the data in the second level cache ??? 
+
+		if (resultOffset > 0)
+			query.setFirstResult(resultOffset); //
+		if (resultLimit > 0)
+			query.setMaxResults(resultLimit);
+		final List<Long> references = query.setParameter("lowerCreationTimestamp", null)
+				.setParameter("upperCreationTimestamp", null).setParameter("name", name).setParameter("genre", null)
+				.setParameter("artist", null).setParameter("ordinal", null).getResultList();
+
+		final List<Track> tracks = new ArrayList<>(); // to save and check the data in the second level cache ???
 		for (final long reference : references) {
 			final Track track = radioManager.find(Track.class, reference);
-			if (track != null) tracks.add(track);
+			if (track != null)
+				tracks.add(track);
 		}
 		return tracks;
 	}
-	
-	
+
 	/**
-	 * : Returns the track-content and track-type matching the given
-	 * document ID – NOT it's JSON-Representation! Use result class "Response"
-	 * in order to set both using the track's content and content-type.
+	 * : Returns the track-content and track-type matching the given document ID –
+	 * NOT it's JSON-Representation! Use result class "Response" in order to set
+	 * both using the track's content and content-type.
 	 **/
 	@GET
 	@Path("tracks/{id}")
@@ -432,38 +393,33 @@ public class EntityService {
 
 		return requester;
 	}
-	
-	
+
 	/**
 	 * Returns a list person matching the given query
 	 * 
-	 * @param personIdentity
-	 *            the person identity
+	 * @param personIdentity the person identity
 	 * @return the matching list of people (HTTP 200)
-	 * @throws ClientErrorException
-	 *             (HTTP 404) if the no person is found
-	 * @throws PersistenceException
-	 *             (HTTP 500) if there is a problem with the persistence layer
-	 * @throws IllegalStateException
-	 *             (HTTP 500) if the entity manager associated with the current
-	 *             thread is not open
+	 * @throws ClientErrorException  (HTTP 404) if the no person is found
+	 * @throws PersistenceException  (HTTP 500) if there is a problem with the
+	 *                               persistence layer
+	 * @throws IllegalStateException (HTTP 500) if the entity manager associated
+	 *                               with the current thread is not open
 	 */
 	/*
 	 * @GET
 	 * 
 	 * @Path("people")
 	 * 
-	 * @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	 * public List<Person> queryPerson (
+	 * @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML }) public
+	 * List<Person> queryPerson (
 	 * 
 	 * @QueryParam(PERSON_FILTER_QUERY)
 	 * 
-	 * @PathParam("id") @Positive final long personIdentity ) { final
-	 * EntityManager messengerManager =
-	 * RestJpaLifecycleProvider.entityManager("messenger"); final List<Person>
-	 * personList =
-	 * messengerManager.createNamedQuery(PERSON_FILTER_QUERY).getResultList();
-	 * if (personList.isEmpty()) throw new ClientErrorException(NOT_FOUND);
+	 * @PathParam("id") @Positive final long personIdentity ) { final EntityManager
+	 * messengerManager = RestJpaLifecycleProvider.entityManager("messenger"); final
+	 * List<Person> personList =
+	 * messengerManager.createNamedQuery(PERSON_FILTER_QUERY).getResultList(); if
+	 * (personList.isEmpty()) throw new ClientErrorException(NOT_FOUND);
 	 * 
 	 * return personList; }
 	 */
@@ -471,31 +427,27 @@ public class EntityService {
 	/**
 	 * Returns a list of albums matching the given query
 	 * 
-	 * @param albumIdentity
-	 *            the album identity
+	 * @param albumIdentity the album identity
 	 * @return the matching list of albums (HTTP 200)
-	 * @throws ClientErrorException
-	 *             (HTTP 404) if the no album is found
-	 * @throws PersistenceException
-	 *             (HTTP 500) if there is a problem with the persistence layer
-	 * @throws IllegalStateException
-	 *             (HTTP 500) if the entity manager associated with the current
-	 *             thread is not open
+	 * @throws ClientErrorException  (HTTP 404) if the no album is found
+	 * @throws PersistenceException  (HTTP 500) if there is a problem with the
+	 *                               persistence layer
+	 * @throws IllegalStateException (HTTP 500) if the entity manager associated
+	 *                               with the current thread is not open
 	 */
 	/*
 	 * @GET
 	 * 
 	 * @Path("albums")
 	 * 
-	 * @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	 * public List<Album> queryAlbum (
+	 * @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML }) public
+	 * List<Album> queryAlbum (
 	 * 
 	 * @QueryParam(ALBUM_FILTER_QUERY)
 	 * 
-	 * @PathParam("id") @Positive final long albumIdentity ) { final
-	 * EntityManager messengerManager =
-	 * RestJpaLifecycleProvider.entityManager("messenger"); final List<Album>
-	 * albumList =
+	 * @PathParam("id") @Positive final long albumIdentity ) { final EntityManager
+	 * messengerManager = RestJpaLifecycleProvider.entityManager("messenger"); final
+	 * List<Album> albumList =
 	 * messengerManager.createNamedQuery(ALBUM_FILTER_QUERY).getResultList(); if
 	 * (albumList.isEmpty()) throw new ClientErrorException(Status.NOT_FOUND);
 	 * 
@@ -520,18 +472,16 @@ public class EntityService {
 	 * 
 	 * @Path("tracks")
 	 * 
-	 * @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	 * public List<Track> queryTracks (
+	 * @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML }) public
+	 * List<Track> queryTracks (
 	 * 
 	 * @QueryParam(TRACKS_FILTER_QUERY)
 	 * 
-	 * @PathParam("id") @Positive final long trackIdentity ) { final
-	 * EntityManager messengerManager =
-	 * RestJpaLifecycleProvider.entityManager("messenger"); final List<Track>
-	 * trackList =
-	 * messengerManager.createNamedQuery(TRACKS_FILTER_QUERY).getResultList();
-	 * if (trackList.isEmpty()) throw new
-	 * ClientErrorException(Status.NOT_FOUND);
+	 * @PathParam("id") @Positive final long trackIdentity ) { final EntityManager
+	 * messengerManager = RestJpaLifecycleProvider.entityManager("messenger"); final
+	 * List<Track> trackList =
+	 * messengerManager.createNamedQuery(TRACKS_FILTER_QUERY).getResultList(); if
+	 * (trackList.isEmpty()) throw new ClientErrorException(Status.NOT_FOUND);
 	 * 
 	 * return trackList; }
 	 */
@@ -539,16 +489,13 @@ public class EntityService {
 	 * Returns the messages caused by the entity matching the given identity, in
 	 * natural order.
 	 * 
-	 * @param entityIdentity
-	 *            the entity identity
+	 * @param entityIdentity the entity identity
 	 * @return the messages caused by the matching entity (HTTP 200)
-	 * @throws ClientErrorException
-	 *             (HTTP 404) if the given message cannot be found
-	 * @throws PersistenceException
-	 *             (HTTP 500) if there is a problem with the persistence layer
-	 * @throws IllegalStateException
-	 *             (HTTP 500) if the entity manager associated with the current
-	 *             thread is not open
+	 * @throws ClientErrorException  (HTTP 404) if the given message cannot be found
+	 * @throws PersistenceException  (HTTP 500) if there is a problem with the
+	 *                               persistence layer
+	 * @throws IllegalStateException (HTTP 500) if the entity manager associated
+	 *                               with the current thread is not open
 	 */
 	// @GET
 	// @Path("{id}/messagesCaused")
@@ -569,26 +516,21 @@ public class EntityService {
 	// }
 
 	/**
-	 * Deletes the entity matching the given identity, or does nothing if no
-	 * such entity exists.
+	 * Deletes the entity matching the given identity, or does nothing if no such
+	 * entity exists.
 	 * 
-	 * @param requesterIdentity
-	 *            the authenticated requester identity
-	 * @param entityIdentity
-	 *            the entity identity
+	 * @param requesterIdentity the authenticated requester identity
+	 * @param entityIdentity    the entity identity
 	 * @return void (HTTP 204)
-	 * @throws ClientErrorException
-	 *             (HTTP 403) if the given requester is not an administrator
-	 * @throws ClientErrorException
-	 *             (HTTP 404) if the given entity cannot be found
-	 * @throws ClientErrorException
-	 *             (HTTP 409) if there is a database constraint violation (like
-	 *             conflicting locks)
-	 * @throws PersistenceException
-	 *             (HTTP 500) if there is a problem with the persistence layer
-	 * @throws IllegalStateException
-	 *             (HTTP 500) if the entity manager associated with the current
-	 *             thread is not open
+	 * @throws ClientErrorException  (HTTP 403) if the given requester is not an
+	 *                               administrator
+	 * @throws ClientErrorException  (HTTP 404) if the given entity cannot be found
+	 * @throws ClientErrorException  (HTTP 409) if there is a database constraint
+	 *                               violation (like conflicting locks)
+	 * @throws PersistenceException  (HTTP 500) if there is a problem with the
+	 *                               persistence layer
+	 * @throws IllegalStateException (HTTP 500) if the entity manager associated
+	 *                               with the current thread is not open
 	 */
 	@DELETE
 	@Path("entities/{id}")
