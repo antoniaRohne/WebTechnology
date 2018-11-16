@@ -150,12 +150,49 @@ public class EntityService {
 	@POST
 	@Path("/people")
 	@Consumes(MediaType.APPLICATION_JSON)
-	@Produces(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.TEXT_PLAIN)
+	public long addOrModifyPerson(
+			@HeaderParam(REQUESTER_IDENTITY) @Positive final long requesterIdentity,
+			@QueryParam("avatarReference") final long avatarReference,
+			Person template
+	) {
+		final EntityManager radioManager = RestJpaLifecycleProvider.entityManager("radio");
+		final Person requester = radioManager.find(Person.class, requesterIdentity);		
+		if (requester == null || requester.getGroup() != Group.ADMIN)
+			throw new ClientErrorException(Status.FORBIDDEN);
+		
+		final boolean insert = requesterIdentity == 0; 
+		final Person person;  
 
-	public Response addPerson(Person template) {
-		String result = "Str" + template + template.getIdentity();
-		return Response.status(200).entity(result).build();
+		if(insert) {
+			final Document avatar = radioManager.find(Document.class,avatarReference);
+			person = new Person(avatar);
+		} else {
+			person = radioManager.find(Person.class,template.getIdentity());
+			if(person == null) throw new ClientErrorException(Status.NOT_FOUND);
+		}
 
+		person.setEmail(template.getEmail());
+		person.setPasswordHash(template.getPasswordHash());
+		person.setGroup(template.getGroup());
+		person.setForename(template.getForename());
+		person.setSurname(template.getSurname());
+		
+		if(insert) {
+			radioManager.persist(person);
+		} else {
+			radioManager.flush();
+		}
+		
+		try {
+			radioManager.getTransaction().commit();
+		} catch (PersistenceException e) {
+			throw new ClientErrorException(Status.CONFLICT);
+		} finally {
+			radioManager.getTransaction().begin();
+		}
+		
+		return person.getIdentity();
 	}
 	
 	/**
