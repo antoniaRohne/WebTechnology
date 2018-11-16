@@ -386,7 +386,7 @@ public class EntityService {
 		@QueryParam("resultOffset")	final int resultOffset, // query parameters, set search range 
 		@QueryParam("resultLimit")	final int resultLimit,
 		@QueryParam("name")	final String name,
-		@QueryParam("genre") final List<String> genre
+		@QueryParam("genre") final String genre
 		
 	) {
 		final EntityManager radioManager = RestJpaLifecycleProvider.entityManager("radio");

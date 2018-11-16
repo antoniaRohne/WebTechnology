@@ -84,7 +84,8 @@
 			
 			let listOfTracks = document.getElementById("listOfTracks");
 			for(let track in tracks){
-				listOfTracks.innerHTML += track+ " ";
+				let t = JSON.parse(track);
+				listOfTracks.innerHTML += t.name+ " ";
 			}
 		}
 	});
