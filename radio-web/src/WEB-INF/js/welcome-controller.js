@@ -54,9 +54,9 @@
 
 				// Although fetch() supports sending credentials from a browser's hidden Basic-Auth credentials store, it lacks
 				// support for storing them securely. This workaround uses a classic XMLHttpRequest invocation as a workaround.
-				Controller.sessionOwner = JSON.parse(await this.xhr("/services/people/0", "GET", {"Accept": "application/json"}, "", "text", email, password));
+				Controller.sessionOwner = JSON.parse(await this.xhr("/services/people", "GET", {"Accept": "application/json"}, "", "text", email, password));
 
-				document.querySelector("header li:last-of-type > a").dispatchEvent(new MouseEvent("click")); 
+				//document.querySelector("header li:nth-child(n+2) > a").dispatchEvent(new MouseEvent("click"));
 			} catch (error) {
 				this.displayError(error);
 			}
