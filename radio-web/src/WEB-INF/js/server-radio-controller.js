@@ -68,21 +68,32 @@
                 		searchedGenres+="genre="+checkboxes[i].id+"&";
                 	}
                 }
-                	
                 searchedGenres = searchedGenres.slice(0, -1);
            
                 console.log (searchedGenres);
-				// Although fetch() supports sending credentials from a browser's hidden Basic-Auth credentials store, it lacks
-				// support for storing them securely. This workaround uses a classic XMLHttpRequest invocation as a workaround.
-				var tracks = JSON.parse(await this.xhr("/services/tracks?"+searchedGenres, "GET", {"Accept": "application/json"}, "", "text", "ines.bergmann@web.de", "ines"));
-				
+				//FETCH!
+				//var tracks = JSON.parse(await this.xhr("/services/tracks?"+searchedGenres, "GET", {"Accept": "application/json"}, "", "text", "ines.bergmann@web.de", "ines"));
+				var tracks = JSON.parse(await fetch("/services/tracks?"+searchedGenres, {
+			        method: "GET", // *GET, POST, PUT, DELETE, etc.
+			        mode: "cors", // no-cors, cors, *same-origin
+			        cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
+			        credentials: "include", // include, *same-origin, omit
+			        headers: {
+			            "Content-Type": "application/json; charset=utf-8",
+			        },
+			        //body: JSON.stringify(data), // body data type must match "Content-Type" header
+			    }));
+			    
 				console.log(tracks);
 				
 			} catch (error) {
 				this.displayError(error);
 			}
 			
-			let listOfTracks = document.getElementById("listOfTracks");
+			let listOfTracks = document.querySelector("#listOfTracks");
+			while (listOfTracks.lastChild) { //Lösche alle vorherigen Einträge
+				listOfTracks.removeChild(listOfTracks.lastChild);
+			}
 			for(let track of tracks){
 				  var li = document.createElement("li");
 				  li.appendChild(document.createTextNode(track.name));
