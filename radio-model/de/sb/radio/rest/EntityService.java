@@ -3,13 +3,19 @@ package de.sb.radio.rest;
 import static de.sb.radio.rest.BasicAuthenticationFilter.REQUESTER_IDENTITY;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceException;
 import javax.persistence.RollbackException;
 import javax.persistence.TypedQuery;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
+import javax.validation.constraints.PositiveOrZero;
 import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -27,6 +33,7 @@ import javax.ws.rs.core.Response.Status;
 import de.sb.radio.persistence.Album;
 import de.sb.radio.persistence.BaseEntity;
 import de.sb.radio.persistence.Document;
+import de.sb.radio.persistence.HashTools;
 import de.sb.radio.persistence.Person;
 import de.sb.radio.persistence.Person.Group;
 import de.sb.radio.persistence.Track;
@@ -46,6 +53,8 @@ import de.sb.toolbox.net.RestJpaLifecycleProvider;
 @Path("")
 @Copyright(year = 2018, holders = "Sascha Baumeister")
 public class EntityService {
+	
+	static private final Set<String> EMPTY_WORD_SINGLETON = Collections.singleton("");
 
 	static private final String PERSON_FILTER_QUERY = "select p.identity from Person as p where "
 			+ "(:lowerCreationTimestamp is null or p.creationTimestamp >= :lowerCreationTimestamp) and "
@@ -66,7 +75,11 @@ public class EntityService {
 			+ "(:name is null or t.name = :name) and" 
 			+ "(:artist is null or t.artist = :artist) and "
 			+ "(:genre is null or t.genre = :genre) and " 
-			+ "(:ordinal is null or t.ordinal = :ordinal)";	/**
+			+ "(:ordinal is null or t.ordinal = :ordinal)";
+	
+	static private final String GENRES_QUERY = "select distinct t.genre from Track as t";
+	
+	/**
 	 * Returns the entity with the given identity.
 	 * 
 	 * @param entityIdentity the entity identity
@@ -106,30 +119,11 @@ public class EntityService {
 	@Path("tracks/genres")
 	@Produces(MediaType.APPLICATION_JSON)
 	public List<String> queryGenres() {
-		
 		final EntityManager radioManager = RestJpaLifecycleProvider.entityManager("radio");
-		final TypedQuery<Long> query = radioManager.createQuery(TRACKS_FILTER_QUERY, Long.class);
+		final TypedQuery<String> query = radioManager.createQuery(GENRES_QUERY, String.class);
+		final List<String> genres = query.getResultList();
+		genres.sort(Comparator.naturalOrder());
 		
-		final List<Long> references = query
-				.setParameter("lowerCreationTimestamp", null)
-				.setParameter("upperCreationTimestamp", null)
-				.setParameter("name", null)
-				.setParameter("artist", null)
-				.setParameter("genre", null)
-				.setParameter("ordinal", null)
-				.getResultList();
-		
-		final List<Track> tracks = new ArrayList<>(); 
-		for (final long reference : references) {
-			final Track track = radioManager.find(Track.class, reference);
-			if (track != null) tracks.add(track);
-		}
-		
-		List<String> genres = new ArrayList<String>();
-		for(Track t : tracks) {
-			if(!genres.contains(t.getGenre()))
-			genres.add(t.getGenre());
-		}
 		return genres;	
 	}
 
@@ -145,18 +139,20 @@ public class EntityService {
 	public long addOrModifyPerson(
 			@HeaderParam(REQUESTER_IDENTITY) @Positive final long requesterIdentity,
 			@QueryParam("avatarReference") final long avatarReference,
-			Person template
+			@HeaderParam("Set-Password") final String password,
+			@NotNull @Valid Person template
 	) {
 		final EntityManager radioManager = RestJpaLifecycleProvider.entityManager("radio");
 		final Person requester = radioManager.find(Person.class, requesterIdentity);		
 		if (requester == null || requester.getGroup() != Group.ADMIN)
 			throw new ClientErrorException(Status.FORBIDDEN);
 		
-		final boolean insert = requesterIdentity == 0; 
+		final boolean insert = template.getIdentity() == 0; 
 		final Person person;  
 
 		if(insert) {
-			final Document avatar = radioManager.find(Document.class,avatarReference);
+			final Document avatar = radioManager.find(Document.class,avatarReference==0 ? 1L : avatarReference);
+			if(avatar == null) throw new ClientErrorException(Status.NOT_FOUND);
 			person = new Person(avatar);
 		} else {
 			person = radioManager.find(Person.class,template.getIdentity());
@@ -164,10 +160,10 @@ public class EntityService {
 		}
 
 		person.setEmail(template.getEmail());
-		person.setPasswordHash(template.getPasswordHash());
-		person.setGroup(template.getGroup());
+		person.setGroup(template.getGroup()); //USER, ADMIN
 		person.setForename(template.getForename());
 		person.setSurname(template.getSurname());
+		if(password != null) person.setPasswordHash(HashTools.sha256HashCode(password));
 		
 		if(insert) {
 			radioManager.persist(person);
@@ -201,9 +197,9 @@ public class EntityService {
 		final Person requester = radioManager.find(Person.class, requesterIdentity);
 		if (requester == null || requester.getGroup() != Group.ADMIN)
 			throw new ClientErrorException(Status.FORBIDDEN);
-
-		final boolean insert = requesterIdentity == 0;
-		final Album album;
+		
+		final boolean insert = template.getIdentity() == 0; 
+		final Album album;  
 
 		if (insert) {
 			final Document cover = radioManager.find(Document.class, coverReference);
@@ -246,9 +242,9 @@ public class EntityService {
 	@Produces(MediaType.TEXT_PLAIN)
 	public long addOrModifyTrack(
 			@HeaderParam(REQUESTER_IDENTITY) @Positive final long requesterIdentity,
-			@QueryParam("albumReference") final long albumReference,
-			@QueryParam("recordingReference") final long recordingReference,
-			@QueryParam("ownerReference") final long ownerReference,
+			@QueryParam("albumReference") final Long albumReference,
+			@QueryParam("recordingReference") final Long recordingReference,
+			@QueryParam("ownerReference") final Long ownerReference,
 			Track template
 	) {
 		final EntityManager radioManager = RestJpaLifecycleProvider.entityManager("radio");
@@ -258,15 +254,24 @@ public class EntityService {
 		
 		final boolean insert = requesterIdentity == 0; 
 		final Track track;  
+		Document recording =null;
+		Person owner = null;
+		Album album = null;
 
 		if(insert) {
-			final Document document = radioManager.find(Document.class,recordingReference);
-			final Person person = radioManager.find(Person.class,ownerReference);
-			final Album album = radioManager.find(Album.class,albumReference);
-			track = new Track(document,person,album);
+			recording = radioManager.find(Document.class,recordingReference);
+			owner = radioManager.find(Person.class,ownerReference);
+			album = radioManager.find(Album.class,albumReference);
+			if(recording==null || owner == null || album == null) throw new ClientErrorException(Status.NOT_FOUND);
+			track = new Track(recording,owner,album);
 		} else {
 			track = radioManager.find(Track.class,template.getIdentity());
 			if(track == null) throw new ClientErrorException(Status.NOT_FOUND);
+			if(recordingReference!=null) { // für alle
+				recording = radioManager.find(Document.class,recordingReference);
+				if(recording == null) throw new ClientErrorException(Status.NOT_FOUND);
+				//track.setRecording(recording);
+			}
 		}
 
 		track.setName(template.getName());
@@ -288,6 +293,9 @@ public class EntityService {
 			radioManager.getTransaction().begin();
 		}
 		
+		if(owner != null) radioManager.getEntityManagerFactory().getCache().evict(Person.class, owner.getIdentity());
+		if(album != null) radioManager.getEntityManagerFactory().getCache().evict(Album.class, album.getIdentity());
+		
 		return track.getIdentity();
 	}
 		
@@ -299,13 +307,17 @@ public class EntityService {
 	@GET
 	@Path("people/{id}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public BaseEntity queryPeople(@PathParam("id") @Positive final long personIdentity) {
+	public BaseEntity queryPeople(
+			@PathParam("id") @PositiveOrZero final long personIdentity,
+			@HeaderParam(REQUESTER_IDENTITY) final long requesterIdentity
+	) {
 		final EntityManager radioManager = RestJpaLifecycleProvider.entityManager("radio");
-		final Person requester = radioManager.find(Person.class, personIdentity);
-		if (requester == null)
+		final long identity = personIdentity == 0 ? requesterIdentity : personIdentity;
+		final Person person = radioManager.find(Person.class, identity);
+		if (person == null)
 			throw new ClientErrorException(Status.NOT_FOUND);
 
-		return requester;
+		return person;
 	}
 
 	/**
@@ -329,16 +341,18 @@ public class EntityService {
 			@QueryParam("forename") final String forename) {
 		final EntityManager radioManager = RestJpaLifecycleProvider.entityManager("radio");
 		final TypedQuery<Long> query = radioManager.createQuery(PERSON_FILTER_QUERY, Long.class);
-
-		if (resultOffset > 0)
-			query.setFirstResult(resultOffset); //
-		if (resultLimit > 0)
-			query.setMaxResults(resultLimit);
-		final List<Long> references = query.setParameter("lowerCreationTimestamp", null)
-				.setParameter("upperCreationTimestamp", null).setParameter("email", email)
-				.setParameter("givenName", forename).setParameter("familyName", null).getResultList();
-
-		final List<Person> people = new ArrayList<>(); // to save and check the data in the second level cache ???
+		
+		if (resultOffset>0) query.setFirstResult(resultOffset); 
+		if (resultLimit>0) query.setMaxResults(resultLimit);
+		final List<Long> references = query
+				.setParameter("lowerCreationTimestamp", null)
+				.setParameter("upperCreationTimestamp", null)
+				.setParameter("email", email)
+				.setParameter("givenName", forename)
+				.setParameter("familyName", null)
+				.getResultList();
+		
+		final List<Person> people = new ArrayList<>(); // to save and check the data in the second level cache ??? 
 		for (final long reference : references) {
 			final Person person = radioManager.find(Person.class, reference);
 			if (person != null)
@@ -439,19 +453,22 @@ public class EntityService {
 		@QueryParam("resultOffset")	final int resultOffset, // query parameters, set search range 
 		@QueryParam("resultLimit")	final int resultLimit,
 		@QueryParam("name")	final String name,
-		@QueryParam("genre") final String genre		
+		@QueryParam("genre") final String genres,
+		@QueryParam("artist") final String artists
 	) {
 		final EntityManager radioManager = RestJpaLifecycleProvider.entityManager("radio");
 		final TypedQuery<Long> query = radioManager.createQuery(TRACKS_FILTER_QUERY, Long.class);
 		
-		if (resultOffset>0) query.setFirstResult(resultOffset); //
+		if (resultOffset>0) query.setFirstResult(resultOffset);
 		if (resultLimit>0) query.setMaxResults(resultLimit);
 		final List<Long> references = query
 				.setParameter("lowerCreationTimestamp", null)
 				.setParameter("upperCreationTimestamp", null)
 				.setParameter("name", null)
-				.setParameter("genre", genre)
-				.setParameter("artist", null)
+				.setParameter("ignoreGenres", genres.isEmpty())
+			    .setParameter("genres", genres.isEmpty() ? EMPTY_WORD_SINGLETON : genres)
+			    .setParameter("ignoreArtists", artists.isEmpty())
+			    .setParameter("artists", artists.isEmpty() ? EMPTY_WORD_SINGLETON : artists)
 				.setParameter("ordinal", null)
 				.getResultList();
 		
@@ -463,144 +480,6 @@ public class EntityService {
 		}
 		return tracks;
 	}
-
-	/**
-	 * : Returns the track-content and track-type matching the given document ID â€“
-	 * NOT it's JSON-Representation! Use result class "Response" in order to set
-	 * both using the track's content and content-type.
-	 **/
-	@GET
-	@Path("tracks/{id}")
-	@Produces(MediaType.APPLICATION_JSON)
-	public BaseEntity queryTrack(@PathParam("id") @Positive final long documentIdentity) {
-		final EntityManager radioManager = RestJpaLifecycleProvider.entityManager("radio");
-		final Track requester = radioManager.find(Track.class, documentIdentity);
-		if (requester == null)
-			throw new ClientErrorException(Status.NOT_FOUND);
-
-		return requester;
-	}
-
-	/**
-	 * Returns a list person matching the given query
-	 * 
-	 * @param personIdentity the person identity
-	 * @return the matching list of people (HTTP 200)
-	 * @throws ClientErrorException  (HTTP 404) if the no person is found
-	 * @throws PersistenceException  (HTTP 500) if there is a problem with the
-	 *                               persistence layer
-	 * @throws IllegalStateException (HTTP 500) if the entity manager associated
-	 *                               with the current thread is not open
-	 */
-	/*
-	 * @GET
-	 * 
-	 * @Path("people")
-	 * 
-	 * @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML }) public
-	 * List<Person> queryPerson (
-	 * 
-	 * @QueryParam(PERSON_FILTER_QUERY)
-	 * 
-	 * @PathParam("id") @Positive final long personIdentity ) { final EntityManager
-	 * messengerManager = RestJpaLifecycleProvider.entityManager("messenger"); final
-	 * List<Person> personList =
-	 * messengerManager.createNamedQuery(PERSON_FILTER_QUERY).getResultList(); if
-	 * (personList.isEmpty()) throw new ClientErrorException(NOT_FOUND);
-	 * 
-	 * return personList; }
-	 */
-
-	/**
-	 * Returns a list of albums matching the given query
-	 * 
-	 * @param albumIdentity the album identity
-	 * @return the matching list of albums (HTTP 200)
-	 * @throws ClientErrorException  (HTTP 404) if the no album is found
-	 * @throws PersistenceException  (HTTP 500) if there is a problem with the
-	 *                               persistence layer
-	 * @throws IllegalStateException (HTTP 500) if the entity manager associated
-	 *                               with the current thread is not open
-	 */
-	/*
-	 * @GET
-	 * 
-	 * @Path("albums")
-	 * 
-	 * @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML }) public
-	 * List<Album> queryAlbum (
-	 * 
-	 * @QueryParam(ALBUM_FILTER_QUERY)
-	 * 
-	 * @PathParam("id") @Positive final long albumIdentity ) { final EntityManager
-	 * messengerManager = RestJpaLifecycleProvider.entityManager("messenger"); final
-	 * List<Album> albumList =
-	 * messengerManager.createNamedQuery(ALBUM_FILTER_QUERY).getResultList(); if
-	 * (albumList.isEmpty()) throw new ClientErrorException(Status.NOT_FOUND);
-	 * 
-	 * return albumList; }+/
-	 * 
-	 * /** Returns a list of tracks matching the given query
-	 * 
-	 * @param trackIdentity the track identity
-	 * 
-	 * @return the matching list of tracks (HTTP 200)
-	 * 
-	 * @throws ClientErrorException (HTTP 404) if the no track is found
-	 * 
-	 * @throws PersistenceException (HTTP 500) if there is a problem with the
-	 * persistence layer
-	 * 
-	 * @throws IllegalStateException (HTTP 500) if the entity manager associated
-	 * with the current thread is not open
-	 */
-	/*
-	 * @GET
-	 * 
-	 * @Path("tracks")
-	 * 
-	 * @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML }) public
-	 * List<Track> queryTracks (
-	 * 
-	 * @QueryParam(TRACKS_FILTER_QUERY)
-	 * 
-	 * @PathParam("id") @Positive final long trackIdentity ) { final EntityManager
-	 * messengerManager = RestJpaLifecycleProvider.entityManager("messenger"); final
-	 * List<Track> trackList =
-	 * messengerManager.createNamedQuery(TRACKS_FILTER_QUERY).getResultList(); if
-	 * (trackList.isEmpty()) throw new ClientErrorException(Status.NOT_FOUND);
-	 * 
-	 * return trackList; }
-	 */
-	/**
-	 * Returns the messages caused by the entity matching the given identity, in
-	 * natural order.
-	 * 
-	 * @param entityIdentity the entity identity
-	 * @return the messages caused by the matching entity (HTTP 200)
-	 * @throws ClientErrorException  (HTTP 404) if the given message cannot be found
-	 * @throws PersistenceException  (HTTP 500) if there is a problem with the
-	 *                               persistence layer
-	 * @throws IllegalStateException (HTTP 500) if the entity manager associated
-	 *                               with the current thread is not open
-	 */
-	// @GET
-	// @Path("{id}/messagesCaused")
-	// @Produces({ APPLICATION_JSON, APPLICATION_XML })
-	// public Message[] queryMessagesCaused (
-	// @PathParam("id") @Positive final long entityIdentity
-	// ) {
-	// final EntityManager messengerManager =
-	// RestJpaLifecycleProvider.entityManager("messenger");
-	// final BaseEntity entity = messengerManager.find(BaseEntity.class,
-	// entityIdentity);
-	// if (entity == null) throw new ClientErrorException(NOT_FOUND);
-	//
-	// final Message[] messages = entity.getMessagesCaused().toArray(new
-	// Message[0]);
-	// Arrays.sort(messages);
-	// return messages;
-	// }
 
 	/**
 	 * Deletes the entity matching the given identity, or does nothing if no such
