@@ -38,7 +38,7 @@
 
 			const mainElement = document.querySelector("main");
 			mainElement.appendChild(document.querySelector("#server-radio-template").content.cloneNode(true).firstElementChild);
-			mainElement.querySelector("button").addEventListener("click", event => this.search());
+			mainElement.querySelector(".buttonSerach").addEventListener("click", event => this.search());
 			
 			var labels = mainElement.querySelectorAll(".horizontal");
 			var checkboxes = document.querySelectorAll("input[type='checkbox']");
@@ -73,17 +73,19 @@
                 console.log (searchedGenres);
 				//FETCH!
 				//var tracks = JSON.parse(await this.xhr("/services/tracks?"+searchedGenres, "GET", {"Accept": "application/json"}, "", "text", "ines.bergmann@web.de", "ines"));
-				var tracks = JSON.parse(await fetch("/services/tracks?"+searchedGenres, {
+				var tracks = await fetch("/services/tracks?"+searchedGenres, {
 			        method: "GET", // *GET, POST, PUT, DELETE, etc.
 			        mode: "cors", // no-cors, cors, *same-origin
 			        cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
 			        credentials: "include", // include, *same-origin, omit
 			        headers: {
-			            "Content-Type": "application/json; charset=utf-8",
+			              'Accept': 'application/json',
+					'Content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
 			        },
 			        //body: JSON.stringify(data), // body data type must match "Content-Type" header
-			    }));
-			    
+			    }).then(res => res.json()).catch(function (error) {
+			        console.log(error);
+			       });
 				console.log(tracks);
 				
 			} catch (error) {
