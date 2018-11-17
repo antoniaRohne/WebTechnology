@@ -71,7 +71,7 @@ public class Document extends BaseEntity {
 
 	@NotNull @Size(min = 1, max = 63) @Pattern(regexp = "^[a-z]+/[[a-z][0-9]\\-\\+\\.]+$")
 	@Column(nullable = false, updatable = true, length = 63)
-	private String contentType;
+	private String contentType; //audio/mp3
 
 	@NotNull @Size(min = 1)
 	@Column(nullable = false, updatable = true)

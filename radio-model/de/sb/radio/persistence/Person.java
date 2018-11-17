@@ -38,6 +38,7 @@ import de.sb.toolbox.bind.JsonProtectedPropertyStrategy;
 @Copyright(year=2005, holders="Sascha Baumeister")
 public class Person extends BaseEntity {
 	static public enum Group { USER, ADMIN }
+	static private final byte[] DEFAULT_PASSWORD_HASH = HashTools.sha256HashCode("default");
 
 	@NotNull @Size(min = 1, max = 128) @Email
 	@Column(nullable = false, updatable = true, length = 128, unique = true)
@@ -83,7 +84,7 @@ public class Person extends BaseEntity {
 	 * @param avatar the avatar, or {@code null} for none
 	 */
 	public Person (final Document avatar) {
-		this.passwordHash = HashTools.sha256HashCode("");
+		this.passwordHash = DEFAULT_PASSWORD_HASH;
 		this.group = USER;
 		this.avatar = avatar;
 		this.tracks = Collections.emptySet();
