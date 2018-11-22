@@ -372,6 +372,8 @@ public class EntityService {
 			if (person != null)
 				people.add(person);
 		}
+		
+		people.sort(Comparator.naturalOrder());
 		return people;
 	}
 
@@ -428,6 +430,7 @@ public class EntityService {
 			if (album != null)
 				albums.add(album);
 		}
+		albums.sort(Comparator.naturalOrder());
 		return albums;
 	}
 
@@ -492,6 +495,8 @@ public class EntityService {
 			if (track != null)
 				tracks.add(track);
 		}
+		
+		tracks.sort(Comparator.naturalOrder());
 		return tracks;
 	}
 
