@@ -214,6 +214,7 @@ public class EntityService {
 
 		if(insert) {
 			final Document cover = radioManager.find(Document.class,coverReference);
+			if(cover == null) throw new ClientErrorException(Status.NOT_FOUND); 
 			album = new Album(cover);
 		} else {
 			album = radioManager.find(Album.class,template.getIdentity());
@@ -264,7 +265,7 @@ public class EntityService {
 		if (requester == null || requester.getGroup() != Group.ADMIN)
 			throw new ClientErrorException(Status.FORBIDDEN);
 		
-		final boolean insert = requesterIdentity == 0; 
+		final boolean insert = template.getIdentity() == 0; 
 		final Track track;  
 		Document recording =null;
 		Person owner = null;
@@ -279,10 +280,22 @@ public class EntityService {
 		} else {
 			track = radioManager.find(Track.class,template.getIdentity());
 			if(track == null) throw new ClientErrorException(Status.NOT_FOUND);
-			if(recordingReference!=null) { // für alle
+			if(recordingReference!=null) {
 				recording = radioManager.find(Document.class,recordingReference);
 				if(recording == null) throw new ClientErrorException(Status.NOT_FOUND);
-				//track.setRecording(recording);
+				track.setRecording(recording);
+			}
+			
+			if(albumReference!=null) { 
+				album = radioManager.find(Album.class,albumReference);
+				if(album == null) throw new ClientErrorException(Status.NOT_FOUND);
+				track.setAlbum(album);
+			}
+			
+			if(ownerReference!=null) { 
+				owner = radioManager.find(Person.class,ownerReference);
+				if(owner == null) throw new ClientErrorException(Status.NOT_FOUND);
+				track.setOwner(owner);
 			}
 		}
 
@@ -307,6 +320,7 @@ public class EntityService {
 		
 		if(owner != null) radioManager.getEntityManagerFactory().getCache().evict(Person.class, owner.getIdentity());
 		if(album != null) radioManager.getEntityManagerFactory().getCache().evict(Album.class, album.getIdentity());
+		//if(recording != null) radioManager.getEntityManagerFactory().getCache().evict(Document.class, recording.getIdentity());
 		
 		return track.getIdentity();
 	}

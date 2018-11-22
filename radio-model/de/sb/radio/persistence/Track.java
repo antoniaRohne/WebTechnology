@@ -118,17 +118,29 @@ public class Track extends BaseEntity {
 	public Person getOwner() {
 		return owner;
 	}
+	
+	public void setOwner(Person owner) {
+		this.owner = owner;
+	}
 
 
 	@JsonbTransient
 	public Album getAlbum() {
 		return album;
 	}
+	
+	public void setAlbum(Album album) {
+		this.album = album;
+	}
 
 
 	@JsonbTransient
 	public Document getRecording() {
 		return recording;
+	}
+	
+	public void setRecording(Document recording) {
+		this.recording = recording;
 	}
 
 }
