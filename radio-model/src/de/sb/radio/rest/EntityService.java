@@ -328,8 +328,7 @@ public class EntityService {
 		final EntityManager radioManager = RestJpaLifecycleProvider.entityManager("radio");
 		final long identity = personIdentity == 0 ? requesterIdentity : personIdentity;
 		final Person person = radioManager.find(Person.class, identity);
-		if (person == null)
-			throw new ClientErrorException(Status.NOT_FOUND);
+		if (person == null) throw new ClientErrorException(Status.NOT_FOUND);
 
 		return person;
 	}
@@ -369,8 +368,8 @@ public class EntityService {
 		final List<Person> people = new ArrayList<>(); // to save and check the data in the second level cache ??? 
 		for (final long reference : references) {
 			final Person person = radioManager.find(Person.class, reference);
-			if (person != null)
-				people.add(person);
+			if (person == null) throw new ClientErrorException(Status.NOT_FOUND);
+			people.add(person);
 		}
 		
 		people.sort(Comparator.naturalOrder());
