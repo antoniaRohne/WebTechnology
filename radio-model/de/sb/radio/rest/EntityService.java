@@ -27,6 +27,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 
 import de.sb.radio.persistence.Album;
@@ -126,15 +128,15 @@ public class EntityService {
 	 * order to set both using the document's content and content-type.
 	 **/
 	@GET
-	@Path("document/{id}")
-	@Produces(MediaType.APPLICATION_JSON)
-	public BaseEntity queryDocument(@PathParam("id") @Positive final long documentIdentity) {
+	@Path("documents/{id}")
+	@Produces(MediaType.TEXT_PLAIN)
+	public Response queryDocument(@PathParam("id") @Positive final long documentIdentity) {
 		final EntityManager radioManager = RestJpaLifecycleProvider.entityManager("radio");
 		final Document document = radioManager.find(Document.class, documentIdentity);
 		if (document == null)
 			throw new ClientErrorException(Status.NOT_FOUND);
 
-		return document;
+			return Response.ok(document).build();
 	}
 
 	/**
