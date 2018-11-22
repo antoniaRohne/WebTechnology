@@ -136,7 +136,7 @@ public class EntityService {
 
 		return document;
 	}
-	
+
 	/**
 	 * : Returns the album-content and album-type matching the given document ID –
 	 * NOT it's JSON-Representation! Use result class "Response" in order to set
@@ -485,6 +485,53 @@ public class EntityService {
 		//if(recording != null) radioManager.getEntityManagerFactory().getCache().evict(Document.class, recording.getIdentity());
 		
 		return track.getIdentity();
+	}
+	
+	/* POST /document: Creates or updates a document from template data within the HTTP
+	 * request body in application/json format.
+	 */
+
+	@POST
+	@Path("/documents")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.TEXT_PLAIN)
+	public static long addOrModifyDocument(@HeaderParam(REQUESTER_IDENTITY) @Positive final long requesterIdentity,
+			 Document template) {
+		final EntityManager radioManager = RestJpaLifecycleProvider.entityManager("radio");
+		final Person requester = radioManager.find(Person.class, requesterIdentity);
+		if (requester == null || requester.getGroup() != Group.ADMIN)
+			throw new ClientErrorException(Status.FORBIDDEN);
+		
+		final boolean insert = template.getIdentity() == 0; 
+		final Document document;
+		
+		if(insert) {
+		document = new Document(null,null);
+		} else {
+			document = radioManager.find(Document.class, template.getIdentity());			
+			if (document == null) 
+				throw new ClientErrorException(Status.NOT_FOUND);
+		}
+		
+		
+		document.setContent(template.getContent());
+		document.setContentType(template.getContentType());
+		if(insert) {
+			radioManager.persist(document);
+		} else {
+			radioManager.flush();
+		}
+
+		try {
+			radioManager.getTransaction().commit();
+		} catch (PersistenceException e) {
+			throw new ClientErrorException(Status.CONFLICT);
+		} finally {
+			radioManager.getTransaction().begin();
+		}
+
+
+		return document.getIdentity();
 	}
 
 	
