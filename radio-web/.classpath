@@ -12,5 +12,6 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/json-yasson-1.0"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/sb-toolbox-1.1"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/server-api-8.0"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/wtat2"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
