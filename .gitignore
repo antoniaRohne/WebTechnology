@@ -33,6 +33,7 @@ RemoteSystemsTempFiles/
 .metadata
 bin/
 **/bin/*
+radio-model/bin/
 tmp/
 tmp/
 *.tmp
