@@ -21,10 +21,10 @@ import de.sb.toolbox.net.HttpCredentials;
 import de.sb.toolbox.net.RestCredentials;
 import de.sb.toolbox.net.RestJpaLifecycleProvider;
 
+
 /**
- * JAX-RS filter provider that performs HTTP "basic" authentication on any REST
- * service request. This aspect-oriented design swaps "Authorization" headers
- * for "Requester-Identity" during authentication.
+ * JAX-RS filter provider that performs HTTP "basic" authentication on any REST service request. This aspect-oriented
+ * design swaps "Authorization" headers for "Requester-Identity" during authentication.
  */
 @Provider
 @Priority(Priorities.AUTHENTICATION)
@@ -36,24 +36,19 @@ public class BasicAuthenticationFilter implements ContainerRequestFilter {
 	 */
 	static public final String REQUESTER_IDENTITY = "Requester-Identity";
 
+
 	/**
-	 * Performs HTTP "basic" authentication by calculating a password hash from the
-	 * password contained in the request's "Authorization" header, and comparing it
-	 * to the one stored in the person matching said header's username. The
-	 * "Authorization" header is consumed in any case, and upon success replaced by
-	 * a new "Requester-Identity" header that contains the authenticated person's
-	 * identity. The filter chain is aborted in case of a problem.
-	 * 
+	 * Performs HTTP "basic" authentication by calculating a password hash from the password contained in the request's
+	 * "Authorization" header, and comparing it to the one stored in the person matching said header's username. The
+	 * "Authorization" header is consumed in any case, and upon success replaced by a new "Requester-Identity" header that
+	 * contains the authenticated person's identity. The filter chain is aborted in case of a problem.
 	 * @param requestContext {@inheritDoc}
 	 * @throws NullPointerException if the given argument is {@code null}
-	 * @throws BadRequestException  if the "Authorization" header is malformed, or
-	 *                              if there is a pre-existing "Requester-Identity"
-	 *                              header
+	 * @throws BadRequestException if the "Authorization" header is malformed, or if there is a pre-existing
+	 *         "Requester-Identity" header
 	 */
-	public void filter(final ContainerRequestContext requestContext)
-			throws NullPointerException, BadRequestException, NotAuthorizedException {
-		if (requestContext.getHeaders().containsKey(REQUESTER_IDENTITY))
-			throw new BadRequestException();
+	public void filter (final ContainerRequestContext requestContext) throws NullPointerException, BadRequestException, NotAuthorizedException {
+		if (requestContext.getHeaders().containsKey(REQUESTER_IDENTITY)) throw new BadRequestException();
 		final List<String> header = requestContext.getHeaders().remove(AUTHORIZATION);
 		final String textCredentials = header == null || header.isEmpty() ? null : header.get(0);
 
@@ -62,8 +57,9 @@ public class BasicAuthenticationFilter implements ContainerRequestFilter {
 
 			final EntityManager messengerManager = RestJpaLifecycleProvider.entityManager("radio");
 			final List<Person> people = messengerManager
-					.createQuery("select p from Person as p where p.email = :email", Person.class)
-					.setParameter("email", credentials.getUsername()).getResultList();
+				.createQuery("select p from Person as p where p.email = :email", Person.class)
+				.setParameter("email", credentials.getUsername())
+				.getResultList();
 
 			if (people.size() == 1) {
 				final Person person = people.get(0);

@@ -27,7 +27,6 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import de.sb.radio.persistence.Album;
@@ -138,8 +137,6 @@ public class EntityService {
 		return document;
 	}
 	
-
-	
 	/**
 	 * : Returns the album-content and album-type matching the given document ID –
 	 * NOT it's JSON-Representation! Use result class "Response" in order to set
@@ -180,7 +177,7 @@ public class EntityService {
 		final TypedQuery<Long> query = radioManager.createQuery(ALBUM_FILTER_QUERY, Long.class);
 
 		if (resultOffset > 0)
-			query.setFirstResult(resultOffset); //
+			query.setFirstResult(resultOffset); 
 		if (resultLimit > 0)
 			query.setMaxResults(resultLimit);
 		final List<Long> references = query.setParameter("lowerCreationTimestamp", null)
@@ -533,3 +530,5 @@ public class EntityService {
 		radioManager.getEntityManagerFactory().getCache().evict(BaseEntity.class, entityIdentity);
 	}
 }
+
+
