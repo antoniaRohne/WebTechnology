@@ -1,2 +1,9 @@
 bin/
-*.class
+.class
+/bin/
+.classpath
+.project
+.settings/
+.loadpath
+.metadata/
+
