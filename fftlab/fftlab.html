@@ -1,0 +1,72 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<meta name="author" content="Sascha Baumeister" />
+		<meta name="dcterms.rightsHolder" content="Sascha Baumeister" />
+		<meta name="dcterms.rights" content="all rights reserved" />
+		<meta name="dcterms.dateCopyrighted" content="2014-2015" />
+
+		<title>FFT Laboratory</title>
+		<link rel="stylesheet" href="stylesheet.css" />
+		<link rel="shortcut icon" href="image/application.ico"/>
+
+		<script src="js/complex-math.js" ></script>
+		<script src="js/function-controller.js" ></script>
+		<script src="js/application.js" ></script>
+	</head>
+
+
+	<body>
+		<div id="fftlab-view">
+			<div class="controls">
+				<a id="pencil-control" class="control horizontal" title="pencil"><img src="image/pencil.png" /></a>
+				<a id="sticky-pencil-control" class="control horizontal" title="sticky pencil"><img src="image/sticky-pencil.png" /></a>
+				<a id="rotor-control" class="control horizontal" title="rotor"><img src="image/rotor.png" /></a>
+				<a id="mirror-control" class="control horizontal" title="mirror"><img src="image/mirror.png" /></a>
+				<a id="eraser-control" class="control horizontal" title="eraser"><img src="image/eraser.png" /></a>
+				<a id="reset-control" class="control horizontal" title="reset"><img src="image/reset.png" /></a>
+				<a id="fold-control" class="control horizontal" title="fold"><img src="image/fold.png" /></a>
+				<input id="magnitude-control" class="control" title="horizontal scale" type="range" min="1" max="9" step="1" value = "5" />
+				<input id="zoom-control" class="control" title="vertical scale" type="range" min="-4" max="4" step="0.02" value = "0" />
+			</div>
+			<div class="editors">
+				<div>
+					<div class="editor-controls">
+						<p>z=f(k)</p>
+						<a id="top-system-control" class="control vertical" title="coordinate system"><img src="#" /></a>
+						<a id="top-auralization-control" class="control vertical" title="auralization"><img src="#" /></a>
+					</div>
+					<div class="editor">
+						<svg id="top-left-editor" class="editor"></svg>
+						<svg id="top-right-editor" class="editor"></svg>
+					</div>
+				</div>
+				<div>
+					<div>
+						<div class="editor-controls">
+							<p>z=F(t)</p>
+							<a id="bottom-system-control" class="control vertical" title="coordinate system"><img src="#" /></a>
+							<a id="bottom-auralization-control" class="control vertical" title="auralization"><img src="#" /></a>
+						</div>
+						<div class="editor">
+							<svg id="bottom-left-editor" class="editor"></svg>
+							<svg id="bottom-right-editor" class="editor"></svg>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div>
+				<input id="description-control" type="button" value="toggle description" />
+				<div class="hidden">
+					<p>This application uses Fast Fourier Transform (FFT) to transform a complex vector in the frequency domain (top view) into a complex vector in the time domain (bottom view), and vice versa. This project was inspired by Dave Hale's famous (and by now pretty aged) <a href="http://sepwww.stanford.edu/oldsep/hale/FftLab.html">FFT Laboratory Java applet</a> from 1996. It is a complete reimplementation of said project in vanilla JavaScript (ECMAScript 5+), and extends the original ideas by adding polar coordinate views, waveform synthesis for auralization, folding for time domain channel separation, additional editing tools, and vertical zooming. It is optimized to demonstrate FFT operations in connection with audio, but can of course as well be used to demonstrate the concept in other fields of interest (like image, video, FFT algorithm tests, etc). The application is platform-agnostic and should run on any operating system. It has been tested on Firefox (version 34), Chromium (version 39), Internet Explorer (version 11), and the integrated browser of the Eclipse Web Tools Platform (version Luna). Note that both the Eclipse Browser and Internet Explorer do not yet support the Web Audio API, therefore the auralization feature is not available on these browsers. Internet Explorer 11 also fails to contain SVG graphics elements inside their parent elements due to a browser bug, therefore lollipops may appear all over the screen; you can work around it by using less zoom, or by using a different Web Browser.</p>
+					<p>Each section consists of two lollipop editors that display/modify a vector of complex numbers. In the cartesian view (default), these two represent the real (left) and imaginary (right) parts of the vector's elements. In polar view (switch using button to the left of the section) these two represent absolute values (left) and argument angels (right). Note that the polar view allows entering "negative absolute values", which are interpreted as positive absolute values with an additional argument angle offset of &pi;. It also allows editing argument angles outside range [-&pi;, +&pi;[, which are renormalized into said range. Pressing the auralization button converts the associated complex vector into a stereo clip and continually loops over it with a sampling rate of 11025Hz, four times slower than usual in order to pitch down the waveforms by two octaves.</p>
+					<p>The lollipop waveform editors support the following editor modes: The pencil is designed to edit multiple values while keeping the mouse button pressed. The sticky pencil is designed to modify one sample in great detail, without loosing grip on it. The rotor tool allows the samples to be rotated to the left of right (single channel), while the mirror tool allows them to be mirrored at the horizontal axis. The eraser tool erases single values, while the reset button resets all values of both sections to zero.</p>
+					<p>The fold button causes a folding operation to be performed before Fourier transforming the values from the frequency to the time domain (top to bottom), and a corresponding unfolding operation after inverse Fourier transforming the values from the time to the frequency domain (bottom to top). This untangles the frequency domain values into a stereo spectrum, effectively using only a single O(N*logN) Fast Fourier Transform plus one O(N) folding operation. In fold mode, the left half of the complex values in the frequency domain (both editors) represent the spectrum of the left channel in the time domain (with ascending frequencies), while the right half of said values represents the corresponding spectrum of the right channel in the time domain (with descending frequencies); the values are best viewed in polar coordinates. The complex values at index zero and &frac12;N combine 0Hz (real part) and the Nyquist Frequency (imaginary part) of their respective channel.</p>
+					<p>Please contact <a href="mailto:sascha.baumeister@gmail.com?subject=fftlab-js">sascha.baumeister@gmail.com</a> in case of problems or bugs.</p>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

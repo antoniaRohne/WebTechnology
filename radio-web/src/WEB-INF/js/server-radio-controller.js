@@ -38,7 +38,7 @@
 
 			const mainElement = document.querySelector("main");
 			mainElement.appendChild(document.querySelector("#server-radio-template").content.cloneNode(true).firstElementChild);
-			mainElement.querySelector(".buttonSerach").addEventListener("click", event => this.search());
+			mainElement.querySelector(".buttonSearch").addEventListener("click", event => this.search());
 			
 			var labels = mainElement.querySelectorAll(".horizontal");
 			var checkboxes = document.querySelectorAll("input[type='checkbox']");
