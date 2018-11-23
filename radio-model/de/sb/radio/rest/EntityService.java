@@ -176,7 +176,11 @@ public class EntityService {
 	public List<Album> queryAlbum(
 			@QueryParam("resultOffset") final int resultOffset,
 			@QueryParam("resultLimit") final int resultLimit,
-			@QueryParam("title") final String title
+			@QueryParam("lowerCreationTimestamp") final Long lowerCreationTimestamp,
+			@QueryParam("upperCreationTimestamp") final Long upperCreationTimestamp,
+			@QueryParam("title") final String title,
+			@QueryParam("releaseYear") final String releaseYear,
+			@QueryParam("trackCount") final String trackCount
 	) {
 		final EntityManager radioManager = RestJpaLifecycleProvider.entityManager("radio");
 
@@ -184,11 +188,11 @@ public class EntityService {
 		if (resultOffset > 0) query.setFirstResult(resultOffset); 
 		if (resultLimit > 0) query.setMaxResults(resultLimit);
 		final List<Long> references = query
-				.setParameter("lowerCreationTimestamp", null)
-				.setParameter("upperCreationTimestamp", null)
+				.setParameter("lowerCreationTimestamp", lowerCreationTimestamp)
+				.setParameter("upperCreationTimestamp", upperCreationTimestamp)
 				.setParameter("title", title)
-				.setParameter("releaseYear", null)
-				.setParameter("trackCount", null)
+				.setParameter("releaseYear", releaseYear)
+				.setParameter("trackCount", trackCount)
 				.getResultList();
 
 		final List<Album> albums = new ArrayList<>(); // to save and check the data in the second level cache ???
@@ -237,6 +241,7 @@ public class EntityService {
 				.setParameter("familyName", surname)
 				.getResultList();
 		
+		
 		final List<Person> people = new ArrayList<>(); // to save and check the data in the second level cache ??? 
 		for (final long reference : references) {
 			final Person person = radioManager.find(Person.class, reference);
@@ -266,9 +271,12 @@ public class EntityService {
 	public List<Track> queryTrack(
 		@QueryParam("resultOffset")	final int resultOffset, 
 		@QueryParam("resultLimit")	final int resultLimit,
+		@QueryParam("lowerCreationTimestamp") final Long lowerCreationTimestamp,
+		@QueryParam("upperCreationTimestamp") final Long upperCreationTimestamp,
 		@QueryParam("name")	final String name,
 		@QueryParam("genre") final Set<String> genres,
-		@QueryParam("artist") final Set<String> artists
+		@QueryParam("artist") final Set<String> artists,
+		@QueryParam("ordinal")	final String ordinal
 	) {
 		final EntityManager radioManager = RestJpaLifecycleProvider.entityManager("radio");
 
@@ -276,14 +284,14 @@ public class EntityService {
 		if(resultOffset > 0) query.setFirstResult(resultOffset);
 		if(resultLimit > 0) query.setMaxResults(resultLimit);
 		final List<Long> references = query
-				.setParameter("lowerCreationTimestamp", null)
-				.setParameter("upperCreationTimestamp", null)
-				.setParameter("name", null)
+				.setParameter("lowerCreationTimestamp", lowerCreationTimestamp)
+				.setParameter("upperCreationTimestamp", lowerCreationTimestamp)
+				.setParameter("name", name)
 				.setParameter("ignoreGenres", genres.isEmpty())
 			    .setParameter("genres", genres.isEmpty() ? EMPTY_WORD_SINGLETON : genres)
 			    .setParameter("ignoreArtists", artists.isEmpty())
 			    .setParameter("artists", artists.isEmpty() ? EMPTY_WORD_SINGLETON : artists)
-				.setParameter("ordinal", null)
+				.setParameter("ordinal", ordinal)
 				.getResultList();
 		
 		final List<Track> tracks = new ArrayList<>();
