@@ -2,46 +2,47 @@ package de.sb.radio.rest;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.Persistence;
+import javax.persistence.PersistenceException;
+import javax.ws.rs.ClientErrorException;
+import javax.ws.rs.core.Response.Status;
+
 import de.sb.radio.persistence.Document;
+import de.sb.toolbox.net.RestJpaLifecycleProvider;
 
 public class DocumentHelperClass {
 
-	static public void main (final String[] args) {
-		DocumentHelperClass name = new DocumentHelperClass();
-		name.addmp3();
+	static private final EntityManagerFactory RADIO_FACTORY = Persistence.createEntityManagerFactory("radio");
+	
+	static public void main (final String[] args) throws IOException {
+		Path filePath = Paths.get(args[0]);
+		final long recordingReference = addDocument(filePath);
+		//erstellen eines tracks übergebe die recordingReference
 	}
 	
-	public void addmp3() {
+	static public long addDocument(final Path filePath) throws IOException {
 		
-		String filePath = "C:\\Users\\vlado\\Desktop\\Agile\\WebTechnology\\joy.mp3";
+		// String filePath = "C:\\Users\\vlado\\Desktop\\Agile\\WebTechnology\\joy.mp3";
 		
+		final EntityManager radioManager = RADIO_FACTORY.createEntityManager();
+		byte[] content = Files.readAllBytes(filePath);
+		Document recording = new Document ("music/mp3", content);
+		radioManager.persist(recording);
+
 		try {
-			byte[] mFile = Files.readAllBytes(Paths.get(filePath));
-			System.out.println(mFile);
-			Document song = new Document ("music/mp3",mFile);
-			EntityService.addOrModifyDocument(1,song);
-//			final EntityManager radioManager = RestJpaLifecycleProvider.entityManager("radio");
-//			radioManager.persist(song);
-//	
-//			System.out.println("Written"); 
-//			try {
-//				radioManager.getTransaction().commit();
-//				System.out.println("Commited");
-//			} catch (PersistenceException e) {
-//				throw new ClientErrorException(Status.CONFLICT);
-//			} finally {
-//				radioManager.getTransaction().begin();
-//			}
-			
-		}catch(IOException e){
-			e.printStackTrace();
-			
+			radioManager.getTransaction().commit();
+			System.out.println("Commited");
+		} catch (PersistenceException e) {
+			throw new ClientErrorException(Status.CONFLICT);
+		} finally {
+			radioManager.getTransaction().begin();
 		}
-		
-	
-	
-	}
-	
+
+		return recording.getIdentity();
+	}	
 }
