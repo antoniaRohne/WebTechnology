@@ -74,7 +74,9 @@ public class EntityService {
 			+ "(:lowerCreationTimestamp is null or t.creationTimestamp >= :lowerCreationTimestamp) and  "
 			+ "(:upperCreationTimestamp is null or t.creationTimestamp <= :upperCreationTimestamp) and"
 			+ "(:name is null or t.name = :name) and" 
+			+ "(:ignoreArtists = true or t.artist in :artists)"
 			+ "(:artist is null or t.artist = :artist) and "
+			+ "(:ignoreGenres = true or t.genre in :genres)"
 			+ "(:genre is null or t.genre = :genre) and " 
 			+ "(:ordinal is null or t.ordinal = :ordinal)";
 	
