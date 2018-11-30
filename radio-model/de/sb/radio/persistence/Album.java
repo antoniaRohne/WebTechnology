@@ -50,9 +50,8 @@ public class Album extends BaseEntity {
 	@OneToMany(mappedBy="album", cascade = {CascadeType.REMOVE, CascadeType.REFRESH, CascadeType.MERGE, CascadeType.DETACH}) 
 	private Set<Track> tracks;
 
-	@NotNull
 	@ManyToOne(optional = false)
-	@JoinColumn(name = "coverReference", nullable = false, updatable = false, insertable = true)
+	@JoinColumn(name = "coverReference", nullable = false, updatable = true)
 	private Document cover;
 
 
@@ -107,9 +106,13 @@ public class Album extends BaseEntity {
 	public void setTrackCount(byte trackCount) {
 		this.trackCount = trackCount;
 	}
-
+	
 	@JsonbTransient 
 	public Document getCover() {
 		return cover;
+	}
+ 
+	public void setCover(Document cover) {
+		this.cover = cover;
 	}
 }

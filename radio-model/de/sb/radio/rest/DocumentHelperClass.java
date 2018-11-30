@@ -31,17 +31,15 @@ public class DocumentHelperClass {
 		System.out.println(coverReference);
 		long recordingReference = addDocument(recordingFilePath, "music/mp3");
 		System.out.println(recordingReference);
-		
 		long albumIdentity = addAlbum(coverReference);
 		System.out.println(albumIdentity);
-		long trackIdentity = addTrack(recordingReference, albumIdentity, 1);
+		long trackIdentity = addTrack(recordingReference, albumIdentity, 3); 
 		System.out.println(trackIdentity);
-		
 		
 	}
 
 	private static long addTrack(long recordingReference, long albumIdentity, int personIdentity) {
-		
+		RADIO_MANAGER.getTransaction().begin();
 		final Document recording = RADIO_MANAGER.find(Document.class,recordingReference);
 		final Person person = RADIO_MANAGER.find(Person.class,personIdentity);
 		//if(person == null) throw new ClientErrorException(Status.NOT_FOUND);
@@ -49,49 +47,31 @@ public class DocumentHelperClass {
 		Track track = new Track(recording,person,album);
 		
 		RADIO_MANAGER.persist(track);
-		try {
-			RADIO_MANAGER.getTransaction().begin();
-		} catch (PersistenceException e) {
-			throw new ClientErrorException(Status.CONFLICT);
-		}finally {
-			RADIO_MANAGER.getTransaction().commit();
-		}
+		RADIO_MANAGER.getTransaction().commit();
 		
 		return track.getIdentity();
 	}
 	
 	private static long addAlbum(long coverReference) throws IOException {
+		RADIO_MANAGER.getTransaction().begin();
 		final Document cover = RADIO_MANAGER.find(Document.class,coverReference);
 		Album album = new Album(cover);
-		//Identity = 0 => exception ... why ?
 		
 		RADIO_MANAGER.persist(album);
-		try {
-			RADIO_MANAGER.getTransaction().begin();
-		} catch (PersistenceException e) {
-			throw new ClientErrorException(Status.CONFLICT);
-		}finally {
-			RADIO_MANAGER.getTransaction().commit();
-		}
+		RADIO_MANAGER.getTransaction().commit();
 		
 		return album.getIdentity();
 
 	}
 
 	static public long addDocument(final Path filePath, String contentType) throws IOException {
-
+		RADIO_MANAGER.getTransaction().begin();
 		byte[] content = Files.readAllBytes(filePath);
 		Document document = new Document(contentType, content);
 		
 		RADIO_MANAGER.persist(document);
-		try {
-			RADIO_MANAGER.getTransaction().begin();
-		} catch (PersistenceException e) {
-			throw new ClientErrorException(Status.CONFLICT);
-		}finally {
-			RADIO_MANAGER.getTransaction().commit();
-		}
-
+		RADIO_MANAGER.getTransaction().commit();
+			
 		return document.getIdentity();
 	}
 }
