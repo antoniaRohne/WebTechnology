@@ -13,5 +13,6 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/radio-model"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/agile"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/mp3"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/radio-processor"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

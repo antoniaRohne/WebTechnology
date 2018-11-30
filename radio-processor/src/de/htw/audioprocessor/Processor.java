@@ -11,5 +11,5 @@ public interface Processor {
 	 * @param frame the audio frame
 	 * @throws NullPointerException if the given frame is {@code null}
 	 */
-	void process (double[] frame) throws NullPointerException;
+	void process (double[] frame) throws NullPointerException; //process (alle Samples von einem Frame
 }

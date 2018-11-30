@@ -61,11 +61,9 @@ public class DocumentHelperClass {
 	}
 	
 	private static long addAlbum(long coverReference) throws IOException {
-		System.out.println(coverReference);
-		
 		final Document cover = RADIO_MANAGER.find(Document.class,coverReference);
 		Album album = new Album(cover);
-		System.out.println(album.getIdentity());
+		//Identity = 0 => exception ... why ?
 		
 		RADIO_MANAGER.persist(album);
 		try {
