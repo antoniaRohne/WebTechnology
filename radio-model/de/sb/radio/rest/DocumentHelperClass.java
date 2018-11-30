@@ -12,6 +12,7 @@ import javax.persistence.PersistenceException;
 import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.core.Response.Status;
 
+import de.sb.radio.persistence.Album;
 import de.sb.radio.persistence.Document;
 import de.sb.radio.persistence.Person;
 import de.sb.radio.persistence.Track;
@@ -20,61 +21,79 @@ import de.sb.toolbox.net.RestJpaLifecycleProvider;
 public class DocumentHelperClass {
 
 	static private final EntityManagerFactory RADIO_FACTORY = Persistence.createEntityManagerFactory("radio");
+	final static EntityManager RADIO_MANAGER = RADIO_FACTORY.createEntityManager();
 
 	static public void main(final String[] args) throws IOException {
-		Path filePath = Paths.get(args[0]);
-		// final long recordingReference = addDocument(filePath,"music/mp3");
+		Path recordingFilePath = Paths.get(args[0]);
+		Path coverFilePath = Paths.get(args[1]);
 
-		// erstellen eines tracks übergebe die recordingReference
-		// createTrack(recordingReference,1);
-		// addCover(filePath);
-		addDocument(filePath, "picture/jpg");
-	}
-
-	private static void addCover(Path filePath) throws IOException {
-		// TODO Auto-generated method stub
-		final long coverReference = addDocument(filePath, "picture/jpg");
-		final EntityManager radioManager = RADIO_FACTORY.createEntityManager();
-		final Document cover = radioManager.find(Document.class, coverReference);
-
-	}
-
-	private static void createTrack(long recordingReference, int personID) {
-		// TODO Auto-generated method stub
-
-		final EntityManager radioManager = RADIO_FACTORY.createEntityManager();
-		//final Person owner = radioManager.find(Person.class, personID);  // how to get a person, in a right way ??? 
-		//final Album album = radioManager.find(Album.class, );	// how to get cover ?
-		//final Document recording = radioManager.find(Document.class,);
-		//Track track = new Track(recording,owner,album);
-		//radioManager.persist(track);
+		long coverReference = addDocument(coverFilePath, "image/jpeg");
+		System.out.println(coverReference);
+		long recordingReference = addDocument(recordingFilePath, "music/mp3");
+		System.out.println(recordingReference);
 		
+		long albumIdentity = addAlbum(coverReference);
+		System.out.println(albumIdentity);
+		long trackIdentity = addTrack(recordingReference, albumIdentity, 1);
+		System.out.println(trackIdentity);
+		
+		
+	}
+
+	private static long addTrack(long recordingReference, long albumIdentity, int personIdentity) {
+		
+		final Document recording = RADIO_MANAGER.find(Document.class,recordingReference);
+		final Person person = RADIO_MANAGER.find(Person.class,personIdentity);
+		//if(person == null) throw new ClientErrorException(Status.NOT_FOUND);
+		final Album album = RADIO_MANAGER.find(Album.class,albumIdentity);
+		Track track = new Track(recording,person,album);
+		
+		RADIO_MANAGER.persist(track);
 		try {
-			radioManager.getTransaction().commit();
-			System.out.println("Commited");
+			RADIO_MANAGER.getTransaction().begin();
 		} catch (PersistenceException e) {
 			throw new ClientErrorException(Status.CONFLICT);
-		} finally {
-			radioManager.getTransaction().begin();
+		}finally {
+			RADIO_MANAGER.getTransaction().commit();
 		}
+		
+		return track.getIdentity();
+	}
+	
+	private static long addAlbum(long coverReference) throws IOException {
+		System.out.println(coverReference);
+		
+		final Document cover = RADIO_MANAGER.find(Document.class,coverReference);
+		Album album = new Album(cover);
+		System.out.println(album.getIdentity());
+		
+		RADIO_MANAGER.persist(album);
+		try {
+			RADIO_MANAGER.getTransaction().begin();
+		} catch (PersistenceException e) {
+			throw new ClientErrorException(Status.CONFLICT);
+		}finally {
+			RADIO_MANAGER.getTransaction().commit();
+		}
+		
+		return album.getIdentity();
+
 	}
 
 	static public long addDocument(final Path filePath, String contentType) throws IOException {
 
-		final EntityManager radioManager = RADIO_FACTORY.createEntityManager();
 		byte[] content = Files.readAllBytes(filePath);
-		Document recording = new Document(contentType, content);
-		radioManager.persist(recording);
-
+		Document document = new Document(contentType, content);
+		
+		RADIO_MANAGER.persist(document);
 		try {
-			radioManager.getTransaction().commit();
-			System.out.println("Commited");
+			RADIO_MANAGER.getTransaction().begin();
 		} catch (PersistenceException e) {
 			throw new ClientErrorException(Status.CONFLICT);
-		} finally {
-			radioManager.getTransaction().begin();
+		}finally {
+			RADIO_MANAGER.getTransaction().commit();
 		}
 
-		return recording.getIdentity();
+		return document.getIdentity();
 	}
 }
