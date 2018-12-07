@@ -36,8 +36,8 @@
 			<section class="genreFilter">
             <fieldset>
                 <legend>Pick your favourite genres</legend>
-                <div>
-                <label class ="horizontal"> Genre </label> 
+                <div id ="genres">
+                <label class ="horizontal"> Genre </label> <!-- dynamisch erstellen je nachdem wieviele artists es gibt -->
                 <input type="checkbox"> 
                 <label class ="horizontal"> Genre </label> 
                 <input type="checkbox"> 
@@ -46,11 +46,27 @@
                 <label class ="horizontal"> Genre </label> 
                 <input type="checkbox"> 
                 </div>
-                <button type="button" class="buttonSearch">Search</button>
+                <button type="button" class="buttonGenreSearch">Search</button>
             </fieldset>
             <div >
             <ul id="listOfTracks">
-            	
+            </ul>
+             <fieldset>
+                <legend>Pick your favourite artists</legend>
+                <div id="artists">
+                <label class ="horizontal"> Artist </label> <!-- dynamisch erstellen je nachdem wieviele artists es gibt -->
+                <input type="checkbox"> 
+                <label class ="horizontal"> Artist </label> 
+                <input type="checkbox"> 
+                <label class ="horizontal"> Artist </label> 
+                <input type="checkbox"> 
+                <label class ="horizontal"> Artist </label> 
+                <input type="checkbox"> 
+                </div>
+                <button type="button" class="buttonArtistSearch">Search</button>
+            </fieldset>
+            <div >
+            <ul id="listOfArtists">
             </ul>
             </div>
             <audio id="player" controls>
@@ -66,7 +82,7 @@
 			<nav class="horizontal">
 				<ul>
 					<li><a>Login</a></li>
-					<li><a>Server Radio</a></li>
+					<li><a>Server Radio</a></li> <!-- on click display() von server radio controller -->
 					<li><a>Peer Radio</a></li>
 					<li><a>Preferences</a></li>
 				</ul>
