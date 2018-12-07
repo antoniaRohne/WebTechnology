@@ -133,13 +133,29 @@ public class EntityService {
 	@GET
 	@Path("documents/{id}")
 	@Produces(MediaType.WILDCARD)
-	public Response queryDocument(@PathParam("id") @Positive final long documentIdentity) {
+	public Response queryDocument(
+		@PathParam("id") @Positive final long documentIdentity,
+		@QueryParam("height") @Positive final Integer imageHeight,
+		@QueryParam("width") @Positive final Integer imageWidth,
+		@QueryParam("compressionRatio") @Positive final Double audioCompressionRatio
+	) {
 		final EntityManager radioManager = RestJpaLifecycleProvider.entityManager("radio");
 		
 		final Document document = radioManager.find(Document.class, documentIdentity);
 		if (document == null) throw new ClientErrorException(Status.NOT_FOUND);
+		
+		byte[] content = document.getContent();
+		String contentType = document.getContentType();
+		
+		if(contentType.startsWith("image/")){
+			//checken height, width != 0
+			//=> content = image scaledImageContent von Document
+		}else if(contentType.startsWith("audio/")) {
+			//checken compression ratio !=0
+			//content = audio -> compression
+		}
 
-		return Response.ok(document.getContent(), document.getContentType()).build();
+		return Response.ok(content, contentType).build();
 	}
 
 	/**
@@ -175,8 +191,8 @@ public class EntityService {
 	@Path("albums")
 	@Produces(MediaType.APPLICATION_JSON)
 	public List<Album> queryAlbum(
-			@QueryParam("resultOffset") final int resultOffset,
-			@QueryParam("resultLimit") final int resultLimit,
+			@QueryParam("offset") final int offset,
+			@QueryParam("limit") final int limit,
 			@QueryParam("lowerCreationTimestamp") final Long lowerCreationTimestamp,
 			@QueryParam("upperCreationTimestamp") final Long upperCreationTimestamp,
 			@QueryParam("title") final String title,
@@ -186,8 +202,8 @@ public class EntityService {
 		final EntityManager radioManager = RestJpaLifecycleProvider.entityManager("radio");
 
 		final TypedQuery<Long> query = radioManager.createQuery(ALBUM_FILTER_QUERY, Long.class);
-		if (resultOffset > 0) query.setFirstResult(resultOffset); 
-		if (resultLimit > 0) query.setMaxResults(resultLimit);
+		if (offset > 0) query.setFirstResult(offset); 
+		if (limit > 0) query.setMaxResults(limit);
 		final List<Long> references = query
 				.setParameter("lowerCreationTimestamp", lowerCreationTimestamp)
 				.setParameter("upperCreationTimestamp", upperCreationTimestamp)
@@ -221,8 +237,8 @@ public class EntityService {
 	@Path("people")
 	@Produces(MediaType.APPLICATION_JSON)
 	public List<Person> queryPerson(
-			@QueryParam("resultOffset") final int resultOffset,
-			@QueryParam("resultLimit") final int resultLimit,
+			@QueryParam("offset") final int offset,
+			@QueryParam("limit") final int limit,
 			@QueryParam("lowerCreationTimestamp") final Long lowerCreationTimestamp,
 			@QueryParam("upperCreationTimestamp") final Long upperCreationTimestamp,
 			@QueryParam("email") final String email,
@@ -232,8 +248,8 @@ public class EntityService {
 		final EntityManager radioManager = RestJpaLifecycleProvider.entityManager("radio");
 
 		final TypedQuery<Long> query = radioManager.createQuery(PERSON_FILTER_QUERY, Long.class);
-		if (resultOffset>0) query.setFirstResult(resultOffset); 
-		if (resultLimit>0) query.setMaxResults(resultLimit);
+		if (offset>0) query.setFirstResult(offset); 
+		if (limit>0) query.setMaxResults(limit);
 		final List<Long> references = query
 				.setParameter("lowerCreationTimestamp", lowerCreationTimestamp)
 				.setParameter("upperCreationTimestamp", upperCreationTimestamp)
@@ -270,8 +286,8 @@ public class EntityService {
 	@Path("tracks")
 	@Produces(MediaType.APPLICATION_JSON)
 	public List<Track> queryTracks(
-		@QueryParam("resultOffset")	final int resultOffset, 
-		@QueryParam("resultLimit")	final int resultLimit,
+		@QueryParam("offset") final int offset, 
+		@QueryParam("limit") final int limit,
 		@QueryParam("lowerCreationTimestamp") final Long lowerCreationTimestamp,
 		@QueryParam("upperCreationTimestamp") final Long upperCreationTimestamp,
 		@QueryParam("name")	final String name,
@@ -282,8 +298,8 @@ public class EntityService {
 		final EntityManager radioManager = RestJpaLifecycleProvider.entityManager("radio");
 
 		final TypedQuery<Long> query = radioManager.createQuery(TRACKS_FILTER_QUERY, Long.class);
-		if(resultOffset > 0) query.setFirstResult(resultOffset);
-		if(resultLimit > 0) query.setMaxResults(resultLimit);
+		if(offset > 0) query.setFirstResult(offset);
+		if(limit > 0) query.setMaxResults(limit);
 		final List<Long> references = query
 				.setParameter("lowerCreationTimestamp", lowerCreationTimestamp)
 				.setParameter("upperCreationTimestamp", lowerCreationTimestamp)
@@ -310,13 +326,13 @@ public class EntityService {
 	@Path("tracks/genres")
 	@Produces(MediaType.APPLICATION_JSON)
 	public List<String> queryGenres(
-			@QueryParam("resultOffset")	final int resultOffset, 
-			@QueryParam("resultLimit")	final int resultLimit
+			@QueryParam("offset")	final int offset, 
+			@QueryParam("limit")	final int limit
 	) {
 		final EntityManager radioManager = RestJpaLifecycleProvider.entityManager("radio");
 		final TypedQuery<String> query = radioManager.createQuery(GENRES_QUERY, String.class);
-		if(resultOffset > 0) query.setFirstResult(resultOffset);
-		if(resultLimit > 0) query.setMaxResults(resultLimit);
+		if(offset > 0) query.setFirstResult(offset);
+		if(limit > 0) query.setMaxResults(limit);
 		final List<String> genres = query.getResultList();
 		genres.sort(Comparator.naturalOrder());
 		
@@ -328,13 +344,13 @@ public class EntityService {
 	@Path("tracks/artists")
 	@Produces(MediaType.APPLICATION_JSON)
 	public List<String> queryArtists(
-			@QueryParam("resultOffset")	final int resultOffset, 
-			@QueryParam("resultLimit")	final int resultLimit
+			@QueryParam("offset")	final int offset, 
+			@QueryParam("limit")	final int limit
 	) {
 		final EntityManager radioManager = RestJpaLifecycleProvider.entityManager("radio");
 		final TypedQuery<String> query = radioManager.createQuery(ARTISTS_QUERY, String.class);
-		if(resultOffset > 0) query.setFirstResult(resultOffset);
-		if(resultLimit > 0) query.setMaxResults(resultLimit);
+		if(offset > 0) query.setFirstResult(offset);
+		if(limit > 0) query.setMaxResults(limit);
 		final List<String> artists = query.getResultList();
 		artists.sort(Comparator.naturalOrder());
 		

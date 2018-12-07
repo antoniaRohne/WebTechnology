@@ -8,8 +8,9 @@
 	// imports
 	const Controller = de_sb_radio.Controller;
 
-	var audioContext;
-
+	let AUDIO_CONTEXT = window.AudioContext || window.webkitAudioContext;
+	let audioContext = new AUDIO_CONTEXT();
+	
 	/**
 	 * Creates a new welcome controller that is derived from an abstract controller.
 	 */
@@ -32,7 +33,7 @@
         
             try{
                //JSON.parse(await this.xhr("/services/tracks/genres", "GET", {"Accept": "application/json"}, "", "text", Controller.sessionOwner.email, Controller.sessionOwner.password));
-            	var genres = JSON.parse(await this.xhr("/services/tracks/genres", "GET", {"Accept": "application/json"}, "", "text", "ines.bergmann@web.de", "ines")); 
+            	var genres = JSON.parse(await this.xhr("/services/tracks/genres?offset=0&limit=100", "GET", {"Accept": "application/json"}, "", "text", "ines.bergmann@web.de", "ines")); 
 			} catch (error) {
 				this.displayError(error);
 			}
@@ -86,54 +87,28 @@
 		}
 	});
 	
-	async function playAudio(identity){
+	ServerRadioController.prototype.playAudio = async function(identity){
 		try {
-			var document = await fetch("/services/documents/49", {
-		        method: "GET", // *GET, POST, PUT, DELETE, etc.
-		        mode: "cors", // no-cors, cors, *same-origin
-		        cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
-		        credentials: "include", // include, *same-origin, omit
-		        headers: {
-		              'Accept': 'audio/wav', //?
-				'Content-type': '*/*',
-		        },
-		        //body: JSON.stringify(data), // body data type must match "Content-Type" header
-		    });
-			
-			console.log(document); 
-			
+				let response = await fetch("/services/documents/49", {
+					method: "GET", // *GET, POST, PUT, DELETE, etc.
+					credentials: "include", // include, *same-origin, omit
+					headers: {"Accept" : 'audio/*'}
+				});
+				
+				let buffer = await response.arrayBuffer();
+				let source = audioContext.createBufferSource();
+				
+				audioContext.decodeAudioData(buffer, decodedData => { //Alternative await decodeAudioData
+					source.loop = false;
+					source.buffer = decodedData;
+					source.connect(audioContext.destination);
+					source.start();
+				});
+				
 		} catch (error) {
 			this.displayError(error);
 		}
-		playByteArray(document.content);
 	} 
-
-	
-	function playByteArray(bytes){
-		window.audioCtx = window.AudioContext|| window.webkitAudioContext;
-		audioContext = new AudioContext();
-	
-		var source = audioContext.createBufferSource();
-		var gain = audioContext.createGain();
-		//var buffer = byteToUint8Array(bytes);
-			
-		audioContext.decodeAudioData(bytes, function(buffer) {
-		source.buffer = buffer;
-		source.connect(gain);
-		gain.connect(context.destination);
-		source.loop = true;
-		source.start(0);
-		});
-	}
-	
-	function byteToUint8Array(byteArray) {
-	    var uint8Array = new Uint8Array(byteArray.length);
-	    for(var i = 0; i < uint8Array.length; i++) {
-	        uint8Array[i] = byteArray[i];
-	    }
-
-	    return uint8Array;
-	}
 
 	/**
 	 * 
@@ -165,7 +140,7 @@
 			        headers: {
 			              'Accept': 'application/json',
 					'Content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
-			        },
+			        }
 			        //body: JSON.stringify(data), // body data type must match "Content-Type" header
 			    }).then(res => res.json()).catch(function (error) {
 			        console.log(error);
@@ -176,19 +151,22 @@
 				this.displayError(error);
 			}
 			
-			let listOfTracks = document.querySelector("#listOfTracks");
-			while (listOfTracks.lastChild) { //Lösche alle vorherigen Einträge
-				listOfTracks.removeChild(listOfTracks.lastChild);
-			}
+			let trackList = document.querySelector("#genreList");
+			if(document.querySelector("#genreSelect")!=null)
+				document.querySelector("#genreSelect").remove();
+				
+			let select = document.createElement("select");
+			select.id = "genreSelect";
 			for(let track of tracks){
-				  var li = document.createElement("li");
-				  li.appendChild(document.createTextNode(track.name));
-				  listOfTracks.appendChild(li);
+				  var option = document.createElement("option");
+				  option.text = track.name;
+				  select.add(option);
 			}
+			trackList.appendChild(select);
 			
 			//var player = document.querySelector("#player");
 			//player.src = "/services/documents/45";
-			//playAudio(tracks[0].identity);
+			this.playAudio(tracks[0].identity);
 		}
 	});
 	
@@ -233,16 +211,18 @@
 				this.displayError(error);
 			}
 			
-			let listOfArtistTracks = document.querySelector("#listOfArtistTracks");
-			while (listOfArtistTracks.lastChild) { //Lösche alle vorherigen Einträge
-				listOfArtistTracks.removeChild(listOfArtistTracks.lastChild);
-			}
+			let artistTrackList = document.querySelector("#artistList");
+			if(document.querySelector("#artistSelect")!=null)
+				document.querySelector("#artistSelect").remove();
+				
+			let select = document.createElement("select");
+			select.id = "artistSelect";
 			for(let track of artistTracks){
-				  var li = document.createElement("li");
-				  li.appendChild(document.createTextNode(track.name));
-				  listOfArtistTracks.appendChild(li);
-			}		
-			
+				  var option = document.createElement("option");
+				  option.text = track.name;
+				  select.add(option);
+			}
+			artistTrackList.appendChild(select);
 		}
 	});
 

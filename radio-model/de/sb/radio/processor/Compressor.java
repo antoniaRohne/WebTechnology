@@ -1,4 +1,4 @@
-package de.htw.audioprocessor;
+package de.sb.radio.processor;
 
 public class Compressor implements Processor {
 	private double expansionRatio;
