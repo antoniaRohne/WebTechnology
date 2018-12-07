@@ -188,8 +188,3 @@ section.messages li.expanded > div a:first-of-type > span {
 section.messages textarea {
 	width: 98%;
 }
-
-#artistFilter{
-min-width: 100px;
-margin: 10px 0;
-}
