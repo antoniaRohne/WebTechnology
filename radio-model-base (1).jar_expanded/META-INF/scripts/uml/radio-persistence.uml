@@ -1,0 +1,18 @@
+// UML entity-relationship diagram for JPA persistence
+// Render using http://yuml.me/diagram/plain/class/draw
+[Comparable(Type)| +compareTo(other:Type):int; ]
+[Group| +_ADMIN:Group; +_USER:Group; | ]-.-^[Comparable(Type)]
+[BaseEntity| -identity:long; -version:int; -creationTimestamp:long; ...; | +getIdentity():long; #setIdentity(:long); +getCreationTimestamp():long; #setCreationTimestamp(:long); +toString():char 0..*; ...; ]-.-^[Comparable(Type)]
+
+[Document| -contentHash:byte 32..32; -contentType:char 1..63; -content:byte 1..*; | +_scaledImageContent;(fileType:char 0..* content:byte 0..* width:int height:int):byte 0..*; ...; ]-^[BaseEntity]
+[Person| -email:char 1..128; -passwordHash:byte 32..32; forename:char 1..31; surname:char 1..31; -tracks:Track 0..*; |; ]-^[BaseEntity]
+[Person]+-group>[Group]
+
+[Album| -title:char 0..127; -releaseYear:short; -trackCount:byte; -cover:Document; -tracks:Track 0..*; | ...; ]-^[BaseEntity]
+[Track| -name:char 1..127; -artist:char 1..127; -genre:char 1..31; -ordinal:byte; -album:Album; -owner:Person; -recording:Document; ]-^[BaseEntity]
+[Album]<1 album - 0..*>[Track]
+[Document]<1 cover - 0..*[Album]
+[Document]<1 recording - 0..*[Track]
+[Person]<1 owner - 0..*>[Track]
+[Document]<1 avatar - 0..*[Person]
+[BaseEntity]-[note: toString(): return class-name + '@' + identity ]

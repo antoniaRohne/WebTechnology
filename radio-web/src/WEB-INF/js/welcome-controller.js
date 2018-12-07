@@ -56,7 +56,7 @@
 				// support for storing them securely. This workaround uses a classic XMLHttpRequest invocation as a workaround.
 				Controller.sessionOwner = JSON.parse(await this.xhr("/services/people/0", "GET", {"Accept": "application/json"}, "", "text", email, password));
 
-				//document.querySelector("header li:nth-child(n+2) > a").dispatchEvent(new MouseEvent("click"));
+				document.querySelector("header li:nth-child(n+2) > a").dispatchEvent(new MouseEvent("click"));
 			} catch (error) {
 				this.displayError(error);
 			}

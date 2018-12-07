@@ -19,6 +19,7 @@
   ServerRadioController.prototype = Object.create(Controller.prototype);
   ServerRadioController.prototype.constructor = ServerRadioController;
 
+
   /**
    * Displays the associated view.
    */
@@ -277,3 +278,4 @@
     anchor.dispatchEvent(new MouseEvent('click'));
   });
 })();
+
