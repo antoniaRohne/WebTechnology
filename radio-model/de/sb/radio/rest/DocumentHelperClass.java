@@ -25,20 +25,20 @@ public class DocumentHelperClass {
 
 	static public void main(final String[] args) throws IOException {
 		Path recordingFilePath = Paths.get(args[0]);
-		Path coverFilePath = Paths.get(args[1]);
+		//Path coverFilePath = Paths.get(args[1]);
 
-		long coverReference = addDocument(coverFilePath, "image/jpeg");
-		System.out.println(coverReference);
-		long recordingReference = addDocument(recordingFilePath, "music/mp3");
-		System.out.println(recordingReference);
-		long albumIdentity = addAlbum(coverReference);
-		System.out.println(albumIdentity);
-		long trackIdentity = addTrack(recordingReference, albumIdentity, 3); 
+		//long coverReference = addDocument(coverFilePath, "image/jpeg");
+		//System.out.println(coverReference);
+		//long recordingReference = addDocument(recordingFilePath, "music/mp3");
+		//System.out.println(recordingReference);
+		//long albumIdentity = addAlbum(coverReference);
+		//System.out.println(albumIdentity);
+		long trackIdentity = addTrack(49, 5, 3); 
 		System.out.println(trackIdentity);
 		
 	}
 
-	private static long addTrack(long recordingReference, long albumIdentity, int personIdentity) {
+	private static long addTrack(long recordingReference, long albumIdentity, long personIdentity) {
 		RADIO_MANAGER.getTransaction().begin();
 		final Document recording = RADIO_MANAGER.find(Document.class,recordingReference);
 		final Person person = RADIO_MANAGER.find(Person.class,personIdentity);

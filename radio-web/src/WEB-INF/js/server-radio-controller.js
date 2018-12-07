@@ -8,6 +8,7 @@
 	// imports
 	const Controller = de_sb_radio.Controller;
 
+	var audioContext;
 
 	/**
 	 * Creates a new welcome controller that is derived from an abstract controller.
@@ -49,7 +50,55 @@
 			}
 		}
 	});
+	
+	async function playAudio(identity){
+		try {
+			var document = await fetch("/services/documents/49", {
+		        method: "GET", // *GET, POST, PUT, DELETE, etc.
+		        mode: "cors", // no-cors, cors, *same-origin
+		        cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
+		        credentials: "include", // include, *same-origin, omit
+		        headers: {
+		              'Accept': '*/*',
+				'Content-type': '*/*',
+		        },
+		        //body: JSON.stringify(data), // body data type must match "Content-Type" header
+		    });
+			
+			console.log(document); 
+			
+		} catch (error) {
+			this.displayError(error);
+		}
+		playByteArray(document.);
+	} 
 
+	
+	function playByteArray(bytes){
+		window.audioCtx = window.AudioContext|| window.webkitAudioContext;
+		audioContext = new AudioContext();
+	
+		var source = audioContext.createBufferSource();
+		var gain = audioContext.createGain();
+		//var buffer = byteToUint8Array(bytes);
+			
+		audioContext.decodeAudioData(bytes, function(buffer) {
+		source.buffer = buffer;
+		source.connect(gain);
+		gain.connect(context.destination);
+		source.loop = true;
+		source.start(0);
+		});
+	}
+	
+	function byteToUint8Array(byteArray) {
+	    var uint8Array = new Uint8Array(byteArray.length);
+	    for(var i = 0; i < uint8Array.length; i++) {
+	        uint8Array[i] = byteArray[i];
+	    }
+
+	    return uint8Array;
+	}
 
 	/**
 	 * 
@@ -72,7 +121,6 @@
            
                 console.log (searchedGenres);
 				//FETCH!
-				//var tracks = JSON.parse(await this.xhr("/services/tracks?"+searchedGenres, "GET", {"Accept": "application/json"}, "", "text", "ines.bergmann@web.de", "ines"));
 				var tracks = await fetch("/services/tracks?"+searchedGenres, {
 			        method: "GET", // *GET, POST, PUT, DELETE, etc.
 			        mode: "cors", // no-cors, cors, *same-origin
@@ -101,9 +149,12 @@
 				  li.appendChild(document.createTextNode(track.name));
 				  listOfTracks.appendChild(li);
 			}
+			
+			//var player = document.querySelector("#player");
+			//player.src = "/services/documents/45";
+			playAudio(tracks[0].identity);
 		}
 	});
-
 
 	/**
 	 * Perform controller callback registration during DOM load event handling.
@@ -115,5 +166,6 @@
 
 		anchor.dispatchEvent(new MouseEvent("click"));
 	});
+	
     
 } ());
