@@ -48,22 +48,38 @@
 			mainElement.querySelector(".buttonGenreSearch").addEventListener("click", event => this.searchGenre());
 			mainElement.querySelector(".buttonArtistSearch").addEventListener("click", event => this.searchArtist());
 			
-			var genreDiv = mainElement.querySelectorAll("genres");
-			var labels = genreDiv.querySelectorAll(".horizontal");
-			var checkboxes = genreDiv.querySelectorAll("input[type='checkbox']");
+			var genreDiv = mainElement.querySelector("#genreChooser");
 			
 			for(let i=0; i<genres.length;i++){
-				labels[i+2].innerHTML= genres[i];
-				checkboxes[i].id = genres[i];
+				var myC = null ;
+				var myL = null ;
+
+				myC = document.createElement('INPUT') ;
+				myC.type = 'checkbox' ;
+				myC.checked = false ;
+				myC.id = genres[i];
+				myL = document.createElement('LABEL') ;
+				myL.innerHTML = genres[i] ;
+
+				myL.appendChild( myC ) ;
+				genreDiv.appendChild( myL ) ;
 			}
 			
-			var artistDiv = mainElement.querySelectorAll("artists");
-			var labels = genreDiv.querySelectorAll(".horizontal");
-			var checkboxes = genreDiv.querySelectorAll("input[type='checkbox']");
+			var artistDiv = mainElement.querySelector("#artistChooser");
 			
-			for(let i=0; i<genres.length;i++){
-				labels[i+2].innerHTML= artists[i];
-				checkboxes[i].id = artists[i];
+			for(let i=0; i<artists.length;i++){
+				var myC = null ;
+				var myL = null ;
+
+				myC = document.createElement('INPUT') ;
+				myC.type = 'checkbox' ;
+				myC.checked = false ;
+				myC.id = artists[i];
+				myL = document.createElement('LABEL') ;
+				myL.innerHTML = artists[i] ;
+
+				myL.appendChild( myC ) ;
+				artistDiv.appendChild( myL ) ;
 			}
 			
 			
@@ -78,7 +94,7 @@
 		        cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
 		        credentials: "include", // include, *same-origin, omit
 		        headers: {
-		              'Accept': '*/*',
+		              'Accept': 'audio/wav', //?
 				'Content-type': '*/*',
 		        },
 		        //body: JSON.stringify(data), // body data type must match "Content-Type" header
@@ -129,7 +145,7 @@
 			this.displayError();
 
 			try {
-				var genreDiv = document.querySelectorAll("genres");
+				var genreDiv = document.querySelector("#genreChooser");
 				var checkboxes = genreDiv.querySelectorAll("input[type='checkbox']");
 				var searchedGenres = "";
                 for(var i = 0; i < checkboxes.length; i++) {
@@ -172,7 +188,7 @@
 			
 			//var player = document.querySelector("#player");
 			//player.src = "/services/documents/45";
-			playAudio(tracks[0].identity);
+			//playAudio(tracks[0].identity);
 		}
 	});
 	
@@ -186,19 +202,19 @@
 			this.displayError();
 
 			try {
-				var artistsDiv = document.querySelectorAll("artists");
-				var checkboxes = artistsDiv.querySelectorAll("input[type='checkbox']");
+				var artistDiv = document.querySelector("#artistChooser");
+				var checkboxes = artistDiv.querySelectorAll("input[type='checkbox']");
 				var searchedArtists = "";
                 for(var i = 0; i < checkboxes.length; i++) {
                 	if(checkboxes[i].checked == true){
-                		searchesArtists+="artist="+checkboxes[i].id+"&";
+                		searchedArtists+="artist="+checkboxes[i].id+"&";
                 	}
                 }
                 searchedArtists = searchedArtists.slice(0, -1);
            
                 console.log (searchedArtists);
 				//FETCH!
-				var artists = await fetch("/services/tracks?"+searchedArtists, {
+				var artistTracks = await fetch("/services/tracks?"+searchedArtists, {
 			        method: "GET", // *GET, POST, PUT, DELETE, etc.
 			        mode: "cors", // no-cors, cors, *same-origin
 			        cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
@@ -211,20 +227,20 @@
 			    }).then(res => res.json()).catch(function (error) {
 			        console.log(error);
 			       });
-				console.log(artists);
+				console.log(artistTracks);
 				
 			} catch (error) {
 				this.displayError(error);
 			}
 			
-			let listOfArtists = document.querySelector("#listOfArtists");
-			while (listOfArtists.lastChild) { //Lösche alle vorherigen Einträge
-				listOfArtists.removeChild(listOfArtists.lastChild);
+			let listOfArtistTracks = document.querySelector("#listOfArtistTracks");
+			while (listOfArtistTracks.lastChild) { //Lösche alle vorherigen Einträge
+				listOfArtistTracks.removeChild(listOfArtistTracks.lastChild);
 			}
-			for(let artist of artists){
+			for(let track of artistTracks){
 				  var li = document.createElement("li");
 				  li.appendChild(document.createTextNode(track.name));
-				  listOfArtists.appendChild(li);
+				  listOfArtistTracks.appendChild(li);
 			}		
 			
 		}
@@ -237,8 +253,6 @@
 		const anchor = document.querySelector("header li:nth-of-type(2) > a");
 		const controller = new ServerRadioController();
 		anchor.addEventListener("click", event => controller.display());
-
-		anchor.dispatchEvent(new MouseEvent("click"));
 	});
 	
     
