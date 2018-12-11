@@ -339,7 +339,7 @@ public class EntityService {
 		return genres;	
 	}
 	
-	/**GET method to get all existed artists**/
+	/**GET method to get all existed genres**/
 	@GET
 	@Path("tracks/artists")
 	@Produces(MediaType.APPLICATION_JSON)

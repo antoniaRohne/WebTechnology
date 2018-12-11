@@ -1,19 +1,19 @@
-<!DOCTYPE html>
+<!doctype html>
 <html xmlns="http://www.w3.org/1999/xhtml">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="author" content="Sascha Baumeister" />
-    <meta name="dcterms.rightsHolder" content="Sascha Baumeister" />
-    <meta name="dcterms.rights" content="all rights reserved" />
-    <meta name="dcterms.dateCopyrighted" content="2018" />
+	<head>
+		<meta charset="utf-8" />
+		<meta name="author" content="Sascha Baumeister" />
+		<meta name="dcterms.rightsHolder" content="Sascha Baumeister" />
+		<meta name="dcterms.rights" content="all rights reserved" />
+		<meta name="dcterms.dateCopyrighted" content="2018" />
 
-    <title>Web-Radio</title>
-    <link rel="stylesheet" type="text/css" href="radio.css" />
-    <link rel="icon" type="image/png" href="radio.png" />
+		<title>Web-Radio</title>
+		<link rel="stylesheet" type="text/css" href="radio.css" />
+		<link rel="icon" type="image/png" href="radio.png"/>
 
-    <script src="js/controller.js"></script>
-    <script src="js/welcome-controller.js"></script>
-    <script src="js/server-radio-controller.js"></script>
+		<script src="js/controller.js"></script>
+		<script src="js/welcome-controller.js"></script>
+        <script src="js/server-radio-controller.js"></script>
 
 		<template id="login-template">
 			<section class="login">
@@ -36,6 +36,7 @@
 			<section class="genreFilter">
             <fieldset>
                 <legend>Pick your favourite genres</legend>
+<<<<<<< HEAD
                 <div id ="genreChooser">
                 </div>
                 <button type="button" class="buttonGenreSearch">Search</button>
@@ -113,4 +114,47 @@
     <footer><output></output></footer>
   </body>
 
+=======
+                <div>
+                <label class ="horizontal"> Genre </label> 
+                <input type="checkbox"> 
+                <label class ="horizontal"> Genre </label> 
+                <input type="checkbox"> 
+                <label class ="horizontal"> Genre </label> 
+                <input type="checkbox"> 
+                <label class ="horizontal"> Genre </label> 
+                <input type="checkbox"> 
+                </div>
+                <button type="button" class="buttonSearch">Search</button>
+            </fieldset>
+            <div >
+            <ul id="listOfTracks">
+            	
+            </ul>
+            </div>
+            <audio id="player" controls>
+  			<source src=" type="audio/mpeg">
+			</audio>
+            </section>
+		</template>
+	</head>
+
+
+	<body>
+		<header>
+			<nav class="horizontal">
+				<ul>
+					<li><a>Login</a></li>
+					<li><a>Server Radio</a></li>
+					<li><a>Peer Radio</a></li>
+					<li><a>Preferences</a></li>
+				</ul>
+			</nav>
+		</header>
+		<main></main>
+		<footer>
+			<output></output>
+		</footer>
+	</body>
+>>>>>>> parent of b28605b... "myCommit"
 </html>
