@@ -2,11 +2,11 @@
  * WelcomeController: radio welcome controller.
  * Copyright (c) 2018 Sascha Baumeister
  */
-"use strict";
+'use strict';
 
-(function () {
-	// imports
-	const Controller = de_sb_radio.Controller;
+(function() {
+  // imports
+  const Controller = de_sb_radio.Controller;
 
 	let AUDIO_CONTEXT = window.AudioContext || window.webkitAudioContext;
 	let audioContext = new AUDIO_CONTEXT();
@@ -44,48 +44,61 @@
 					this.displayError(error);
 				}
 
-			const mainElement = document.querySelector("main");
-			mainElement.appendChild(document.querySelector("#server-radio-template").content.cloneNode(true).firstElementChild);
-			mainElement.querySelector(".buttonGenreSearch").addEventListener("click", event => this.searchGenre());
-			mainElement.querySelector(".buttonArtistSearch").addEventListener("click", event => this.searchArtist());
-			
-			var genreDiv = mainElement.querySelector("#genreChooser");
-			
-			for(let i=0; i<genres.length;i++){
-				var myC = null ;
-				var myL = null ;
+      try {
+        //JSON.parse(await this.xhr("/services/tracks/genres", "GET", {"Accept": "application/json"}, "", "text", Controller.sessionOwner.email, Controller.sessionOwner.password));
+        var genres = JSON.parse(
+          await this.xhr(
+            '/services/tracks/genres',
+            'GET',
+            { Accept: 'application/json' },
+            '',
+            'text',
+            'ines.bergmann@web.de',
+            'ines'
+          )
+        );
+      } catch (error) {
+        this.displayError(error);
+      }
 
-				myC = document.createElement('INPUT') ;
-				myC.type = 'checkbox' ;
-				myC.checked = false ;
-				myC.id = genres[i];
-				myL = document.createElement('LABEL') ;
-				myL.innerHTML = genres[i] ;
+      const mainElement = document.querySelector('main');
+      mainElement.appendChild(
+        document.querySelector('#server-radio-template').content.cloneNode(true)
+          .firstElementChild
+      );
+      mainElement
+        .querySelector('.buttonSearch')
+        .addEventListener('click', event => this.search());
 
-				myL.appendChild( myC ) ;
-				genreDiv.appendChild( myL ) ;
-			}
-			
-			var artistDiv = mainElement.querySelector("#artistChooser");
-			
-			for(let i=0; i<artists.length;i++){
-				var myC = null ;
-				var myL = null ;
+      var labels = mainElement.querySelectorAll('.horizontal');
+      var checkboxes = document.querySelectorAll("input[type='checkbox']");
 
-				myC = document.createElement('INPUT') ;
-				myC.type = 'checkbox' ;
-				myC.checked = false ;
-				myC.id = artists[i];
-				myL = document.createElement('LABEL') ;
-				myL.innerHTML = artists[i] ;
+      for (let i = 0; i < genres.length; i++) {
+        labels[i + 2].innerHTML = genres[i];
+        checkboxes[i].id = genres[i];
+	  }
+	  
+      try {
+        var artists = JSON.parse(
+          await this.xhr(
+            '/services/tracks/artists',
+            'GET',
+            { Accept: 'application/json' },
+            '',
+            'text',
+            'ines.bergmann@web.de',
+            'ines'
+          )
+		);
+		console.log(artists);
+      } catch (error) {
+        this.displayError(error);
+      }
 
-				myL.appendChild( myC ) ;
-				artistDiv.appendChild( myL ) ;
-			}
-			
-			
-		}
-	});
+	 
+      mainElement
+        .querySelector('.buttonSearchArtist')
+        .addEventListener('click', event => this.search_by_artist());
 	
 	ServerRadioController.prototype.playAudio = async function(identity){
 		try {
@@ -226,14 +239,3 @@
 		}
 	});
 
-	/**
-	 * Perform controller callback registration during DOM load event handling.
-	 */
-	window.addEventListener("load", event => {
-		const anchor = document.querySelector("header li:nth-of-type(2) > a");
-		const controller = new ServerRadioController();
-		anchor.addEventListener("click", event => controller.display());
-	});
-	
-    
-} ());
