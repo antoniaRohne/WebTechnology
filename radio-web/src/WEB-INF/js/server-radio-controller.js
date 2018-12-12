@@ -112,6 +112,7 @@
 			this.displayError(error);
 		}
 	} 
+	});
 
 	/**
 	 * 

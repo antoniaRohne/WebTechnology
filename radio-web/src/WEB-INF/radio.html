@@ -14,6 +14,7 @@
 		<script src="js/controller.js"></script>
 		<script src="js/welcome-controller.js"></script>
         <script src="js/server-radio-controller.js"></script>
+        <script src="js/peer-radio-controller.js"></script>
 
 		<template id="login-template">
 			<section class="login">
@@ -52,6 +53,13 @@
             <div id ="artistList">
              </div>
             </section>
+		</template>
+		 <template id="peer-radio-template">
+		 <div id="chooseModus">
+		 <p>Do you want to stream a radio or listen to a peer radio?</p>
+			<button type="button" id="sendButton">Send</button>
+			<button type="button" id="receiveButton">Receive</button>
+		</div>	
 		</template>
 	</head>
 
