@@ -87,7 +87,10 @@
 		}
 	});
 	
-	ServerRadioController.prototype.playAudio = async function(identity){
+	Object.defineProperty(ServerRadioController.prototype, "playAudio", {
+		enumerable: false,
+		configurable: false,
+		value: async function (identity) {
 		try {
 				let response = await fetch("/services/documents/49", {
 					method: "GET", // *GET, POST, PUT, DELETE, etc.
