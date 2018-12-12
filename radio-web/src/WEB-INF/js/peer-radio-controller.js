@@ -5,13 +5,20 @@
 	const Controller = de_sb_radio.Controller;
 
 	let localConnection;
+	let remoteConnection;
 	let sendChannel;
+	let receiveChannel;
+	let nextId = 0;
+	let files;
+	
+	let mainElement;
 	
 	/**
 	 * Creates a new welcome controller that is derived from an abstract controller.
 	 */
 	const PeerRadioController = function () {
 		Controller.call(this);
+		mainElement = document.querySelector("main");
 	}
 	PeerRadioController.prototype = Object.create(Controller.prototype);
 	PeerRadioController.prototype.constructor = PeerRadioController;
@@ -25,7 +32,6 @@
 		configurable: false,
 		writable: true,
 		value: async function () {
-			const mainElement = document.querySelector("main");
 			mainElement.appendChild(document.querySelector("#peer-radio-template").content.cloneNode(true).firstElementChild);
 			mainElement.querySelector("#sendButton").addEventListener("click", event => this.send());
 			mainElement.querySelector("#receiveButton").addEventListener("click", event => this.listen());
@@ -37,9 +43,6 @@
 		configurable: false,
 		writable: true,
 		value: async function () {
-
-			const mainElement = document.querySelector("main");
-			
 			mainElement.querySelector("#chooseModus").remove();
 			
 			let fileChooser = document.createElement('input') ;
@@ -54,17 +57,67 @@
 			localConnection = new RTCPeerConnection();
 
 			sendChannel = localConnection.createDataChannel("sendChannel");
-			//sendChannel.onopen = handleSendChannelStatusChange;
-			//sendChannel.onclose = handleSendChannelStatusChange;
+			/*endChannel.onopen = handleSendChannelStatusChange;
+			sendChannel.onclose = handleSendChannelStatusChange;
+			
+			remoteConnection = new RTCPeerConnection();
+			remoteConnection.ondatachannel = receiveChannelCallback;
+			
+			localConnection.onicecandidate = e => !e.candidate || remoteConnection.addIceCandidate(e.candidate).catch(handleAddCandidateError);
+			remoteConnection.onicecandidate = e => !e.candidate || localConnection.addIceCandidate(e.candidate).catch(handleAddCandidateError);
+			
+			localConnection.createOffer()
+			.then(offer => localConnection.setLocalDescription(offer))
+			.then(() => remoteConnection.setLocalDescription(localConnection.localDescription))
+			.then(() => remoteConnection.createAnswer())
+			.then(answer => remoteConnection.setLocalDescription(answer))
+			.then(() => localConnection.setRemoteDescription(remoteConnection.localDescription))
+			.catch(handleCreateDescriptionError);
+			
+			sendChannel.send(xxx);
+			
+			Disconnect => close channels and then connections with .close */
 		}
 	});
+	
+	function receiveChannelCallback(event){
+		receiveChannel = event.channel;
+		//receiveChannel.onmessage(handleReceiveMessage);
+		//receiveChannel.onopen = handleReceiveChannelStatusChange;
+		//receiveChannel.onclose = handleReceiveChannelStatusChange;
+	}
 	
 	Object.defineProperty(PeerRadioController.prototype, "listen", {
 		enumerable: false,
 		configurable: false,
 		writable: true,
 		value: async function () {
+			mainElement.querySelector("#chooseModus").remove();
 			
+			let sendingPersons = await fetch("/services/people?sending=1", {
+		        method: "GET", // *GET, POST, PUT, DELETE, etc.
+		        mode: "cors", // no-cors, cors, *same-origin
+		        cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
+		        credentials: "include", // include, *same-origin, omit
+		        headers: {
+		              'Accept': 'application/json',
+				'Content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
+		        }
+		        //body: JSON.stringify(data), // body data type must match "Content-Type" header
+		    }).then(res => res.json()).catch(function (error) {
+		        console.log(error);
+		       });
+			
+			let personList = document.createElement('ul');
+			
+			for(let person of sendingPersons){
+				let personEntry = document.createElement('li');
+				personEntry.innerHTML = person.surname;
+				personEntry.addEventListener("click", event => this.startListen());
+				personList.appendChild(personEntry);
+			}	
+			
+			mainElement.appendChild(personList);
 		}
 	});
 
@@ -73,8 +126,8 @@
 		configurable: false,
 		writable: true,
 		value: async function () {
-			const mainElement = document.querySelector("main");
-			var files = mainElement.querySelector("#fileChooser").files;
+			
+			files = mainElement.querySelector("#fileChooser").files;
 			let fileList = document.createElement('ul');
 			
 			for(let i=0; i<files.length;i++){
@@ -85,12 +138,43 @@
 			
 			mainElement.appendChild(fileList);
 			
-			let audioPlayer = document.createElement("audio");
-			audioPlayer.source = URL.createObjectURL(files[0]);
+			if(mainElement.querySelector("#player") == null){
+			let audioPlayer = document.createElement("AUDIO");
+			audioPlayer.id = "player";
+			audioPlayer.setAttribute("src",URL.createObjectURL(files[nextId]));
+			mainElement.querySelector("ul").childNodes[nextId].classList.add("selected");
+			audioPlayer.addEventListener("ended", this.playNext);
 			mainElement.appendChild(audioPlayer);
+			audioPlayer.play();
+			}
+		}
+	});
+	
+	Object.defineProperty(PeerRadioController.prototype, "playNext", {
+		enumerable: false,
+		configurable: false,
+		writable: true,
+		value: async function () {
+			let audioPlayer = mainElement.querySelector("#player");
+			audioPlayer.pause();
+			mainElement.querySelector("ul").childNodes[nextId].classList.remove("selected");
+			nextId++;
+			audioPlayer.setAttribute("src",URL.createObjectURL(files[nextId]));
+			mainElement.querySelector("ul").childNodes[nextId].classList.add("selected");
 			audioPlayer.play();
 		}
 	});
+	
+	Object.defineProperty(PeerRadioController.prototype, "startListen", {
+		enumerable: false,
+		configurable: false,
+		writable: true,
+		value: async function () {
+			
+		}
+	});
+	
+	
 	
 	/**
 	 * Perform controller callback registration during DOM load event handling.

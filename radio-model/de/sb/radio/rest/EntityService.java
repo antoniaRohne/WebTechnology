@@ -63,6 +63,8 @@ public class EntityService {
 			+ "(:email is null or p.email = :email) and " 
 			+ "(:givenName is null or p.surname = :givenName) and "
 			+ "(:familyName is null or p.forename = :familyName) ";
+			/*+ "(:sending is null or p.sending = :sending) and"
+			+ "(:sendingTimestamp is null or p.sendingTimestamp >= :sendingTimestamp) ";*/
 
 	static private final String ALBUM_FILTER_QUERY = "select a.identity from Album as a where "
 			+ "(:lowerCreationTimestamp is null or a.creationTimestamp >= :lowerCreationTimestamp) and "
@@ -244,6 +246,8 @@ public class EntityService {
 			@QueryParam("email") final String email,
 			@QueryParam("forename") final String forename,
 			@QueryParam("surname") final String surname
+			//@QueryParam("sending") final boolean sending,
+			//@QueryParam("sendingTimestamp") final Long sendingTimestamp
 	) {
 		final EntityManager radioManager = RestJpaLifecycleProvider.entityManager("radio");
 
@@ -256,6 +260,8 @@ public class EntityService {
 				.setParameter("email", email)
 				.setParameter("givenName", forename)
 				.setParameter("familyName", surname)
+				//.setParameter("sending", sending)
+				//.setParameter("sendingTimestamp", sendingTimestamp)
 				.getResultList();
 		
 		
