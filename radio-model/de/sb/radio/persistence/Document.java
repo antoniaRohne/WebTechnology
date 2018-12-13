@@ -189,4 +189,6 @@ public class Document extends BaseEntity {
 			throw new AssertionError(exception);
 		}
 	}
+	
+	//Compression method
 }

@@ -14,6 +14,7 @@
 		<script src="js/controller.js"></script>
 		<script src="js/welcome-controller.js"></script>
         <script src="js/server-radio-controller.js"></script>
+        <script src="js/peer-radio-controller.js"></script>
 
 		<template id="login-template">
 			<section class="login">
@@ -36,27 +37,29 @@
 			<section class="genreFilter">
             <fieldset>
                 <legend>Pick your favourite genres</legend>
-                <div>
-                <label class ="horizontal"> Genre </label> 
-                <input type="checkbox"> 
-                <label class ="horizontal"> Genre </label> 
-                <input type="checkbox"> 
-                <label class ="horizontal"> Genre </label> 
-                <input type="checkbox"> 
-                <label class ="horizontal"> Genre </label> 
-                <input type="checkbox"> 
+                <div id ="genreChooser">
                 </div>
-                <button type="button" class="buttonSearch">Search</button>
+                <button type="button" class="buttonGenreSearch">Search</button>
             </fieldset>
-            <div >
-            <ul id="listOfTracks">
-            	
-            </ul>
+            <div id ="genreList">
             </div>
-            <audio id="player" controls>
-  			<source src=" type="audio/mpeg">
-			</audio>
+     
+             <fieldset>
+                <legend>Pick your favourite artists</legend>
+                <div id="artistChooser">
+                </div>
+                <button type="button" class="buttonArtistSearch">Search</button>
+            </fieldset>
+            <div id ="artistList">
+             </div>
             </section>
+		</template>
+		 <template id="peer-radio-template">
+		 <div id="chooseModus">
+		 <p>Do you want to stream a radio or listen to a peer radio?</p>
+			<button type="button" id="sendButton">Send</button>
+			<button type="button" id="receiveButton">Receive</button>
+		</div>	
 		</template>
 	</head>
 
@@ -66,7 +69,7 @@
 			<nav class="horizontal">
 				<ul>
 					<li><a>Login</a></li>
-					<li><a>Server Radio</a></li>
+					<li><a>Server Radio</a></li> <!-- on click display() von server radio controller -->
 					<li><a>Peer Radio</a></li>
 					<li><a>Preferences</a></li>
 				</ul>

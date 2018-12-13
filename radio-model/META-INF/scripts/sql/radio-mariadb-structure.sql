@@ -34,6 +34,7 @@ CREATE TABLE Person (
 	groupAlias ENUM("USER", "ADMIN") NOT NULL,
 	surname VARCHAR(31) NOT NULL,
 	forename VARCHAR(31) NOT NULL,
+	sending BIT NOT NULL DEFAULT 0,
 	PRIMARY KEY (personIdentity),
 	UNIQUE KEY (email),
 	FOREIGN KEY (personIdentity) REFERENCES BaseEntity (identity) ON DELETE CASCADE ON UPDATE CASCADE,

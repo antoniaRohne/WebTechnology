@@ -106,6 +106,10 @@ nav li.selected a, nav li:hover a {
 }
 
 
+.selected{
+	color: red;
+}
+
 section.login input {
 	width: 20em;
 }
