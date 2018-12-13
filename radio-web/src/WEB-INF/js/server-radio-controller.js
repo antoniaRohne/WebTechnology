@@ -45,8 +45,7 @@
 
 			const mainElement = document.querySelector("main");
 			mainElement.appendChild(document.querySelector("#server-radio-template").content.cloneNode(true).firstElementChild);
-			mainElement.querySelector(".buttonGenreSearch").addEventListener("click", event => this.searchGenre());
-			mainElement.querySelector(".buttonArtistSearch").addEventListener("click", event => this.searchArtist());
+			 mainElement.querySelector(".buttonGenreArtistSearch").addEventListener("click", event => this.searchArtistGenre());
 			
 			var genreDiv = mainElement.querySelector("#genreChooser");
 			
@@ -113,89 +112,42 @@
 	} 
 	});
 
-	/**
-	 * 
-	 */
-	Object.defineProperty(ServerRadioController.prototype, "searchGenre", {
-		enumerable: false,
-		configurable: false,
-		value: async function () {
-			this.displayError();
-
-			try {
-				var genreDiv = document.querySelector("#genreChooser");
-				var checkboxes = genreDiv.querySelectorAll("input[type='checkbox']");
-				var searchedGenres = "";
-                for(var i = 0; i < checkboxes.length; i++) {
-                	if(checkboxes[i].checked == true){
-                		searchedGenres+="genre="+checkboxes[i].id+"&";
-                	}
-                }
-                searchedGenres = searchedGenres.slice(0, -1);
-           
-                console.log (searchedGenres);
-				//FETCH!
-				var tracks = await fetch("/services/tracks?"+searchedGenres, {
-			        method: "GET", // *GET, POST, PUT, DELETE, etc.
-			        mode: "cors", // no-cors, cors, *same-origin
-			        cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
-			        credentials: "include", // include, *same-origin, omit
-			        headers: {
-			              'Accept': 'application/json',
-					'Content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
-			        }
-			        //body: JSON.stringify(data), // body data type must match "Content-Type" header
-			    }).then(res => res.json()).catch(function (error) {
-			        console.log(error);
-			       });
-				console.log(tracks);
-				
-			} catch (error) {
-				this.displayError(error);
-			}
-			
-			let trackList = document.querySelector("#genreList");
-			if(document.querySelector("#genreSelect")!=null)
-				document.querySelector("#genreSelect").remove();
-				
-			let select = document.createElement("select");
-			select.id = "genreSelect";
-			for(let track of tracks){
-				  var option = document.createElement("option");
-				  option.text = track.name;
-				  select.add(option);
-			}
-			trackList.appendChild(select);
-			
-			//var player = document.querySelector("#player");
-			//player.src = "/services/documents/45";
-			this.playAudio(tracks[0].identity);
-		}
-	});
 	
-	/**
+/**
 	 * 
 	 */
-	Object.defineProperty(ServerRadioController.prototype, "searchArtist", {
+	Object.defineProperty(ServerRadioController.prototype, "searchArtistGenre", {
 		enumerable: false,
 		configurable: false,
 		value: async function () {
 			this.displayError();
 
 			try {
-				var artistDiv = document.querySelector("#artistChooser");
-				var checkboxes = artistDiv.querySelectorAll("input[type='checkbox']");
-				var searchedArtists = "";
-                for(var i = 0; i < checkboxes.length; i++) {
-                	if(checkboxes[i].checked == true){
-                		searchedArtists+="artist="+checkboxes[i].id+"&";
-                	}
-                }
-                searchedArtists = searchedArtists.slice(0, -1);
+					//	Get array of all picked artists
+					var artistDiv = document.querySelector("#artistChooser");
+					var checkboxes = artistDiv.querySelectorAll("input[type='checkbox']");
+					var searchedArtists = "";
+					for(var i = 0; i < checkboxes.length; i++) {
+						if(checkboxes[i].checked == true){
+							searchedArtists+="artist="+checkboxes[i].id+"&";
+						}
+					}
+					searchedArtists = searchedArtists.slice(0, -1);
+			   
+			   //	Get array of all picked genres
+			   var genreDiv = document.querySelector("#genreChooser");
+					var checkboxes = genreDiv.querySelectorAll("input[type='checkbox']");
+					var searchedGenres = "";
+					for(var i = 0; i < checkboxes.length; i++) {
+						if(checkboxes[i].checked == true){
+							searchedGenres+="genre="+checkboxes[i].id+"&";
+						}
+					}
+					searchedGenres = searchedGenres.slice(0, -1);
            
                 console.log (searchedArtists);
 				//FETCH!
-				var artistTracks = await fetch("/services/tracks?"+searchedArtists, {
+				var tracks = await fetch("/services/tracks?"+searchedArtists+"&"+searchedGenres, {
 			        method: "GET", // *GET, POST, PUT, DELETE, etc.
 			        mode: "cors", // no-cors, cors, *same-origin
 			        cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
@@ -208,24 +160,27 @@
 			    }).then(res => res.json()).catch(function (error) {
 			        console.log(error);
 			       });
-				console.log(artistTracks);
+				console.log(tracks);
 				
 			} catch (error) {
 				this.displayError(error);
 			}
 			
-			let artistTrackList = document.querySelector("#artistList");
-			if(document.querySelector("#artistSelect")!=null)
-				document.querySelector("#artistSelect").remove();
+			let genreArtistTrackList = document.querySelector("#genreArtistList");
+			genreArtistTrackList.innerHTML = "";
 				
-			let select = document.createElement("select");
-			select.id = "artistSelect";
-			for(let track of artistTracks){
-				  var option = document.createElement("option");
-				  option.text = track.name;
-				  select.add(option);
+			let ul = document.createElement("ul");
+			ul.id = "artistSelect";
+		
+			for(let track of tracks){
+				  var li = document.createElement("li");
+				  li.innerText = track.name;
+				  ul.appendChild(li);
 			}
-			artistTrackList.appendChild(select);
+			genreArtistTrackList.appendChild(ul);
+			ul.firstElementChild.classList.add("played");
+			//this.playAudio(tracks[0].identity);
+
 		}
 	});
 
@@ -238,5 +193,4 @@
 		anchor.addEventListener("click", event => controller.display());
 	});
 	
-    
 } ());
