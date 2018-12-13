@@ -62,9 +62,9 @@ public class Person extends BaseEntity {
 	@Column(nullable = false, updatable = true)
 	private String surname;
 	
-	//Default false ?
+	/*Default false ?
 	@Column(nullable = false, updatable = true)
-	private boolean sending;
+	private boolean sending;*/
 	
 	@NotNull
 	@OneToMany(mappedBy="owner", cascade = {CascadeType.REMOVE, CascadeType.REFRESH, CascadeType.MERGE, CascadeType.DETACH})
