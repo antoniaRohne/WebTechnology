@@ -144,10 +144,10 @@
 						}
 					}
 					searchedGenres = searchedGenres.slice(0, -1);
-           
-                console.log (searchedArtists);
+				var limit = document.querySelector("#offset_limit").value;
+                console.log ("limit is now:",limit + " songs");
 				//FETCH!
-				var tracks = await fetch("/services/tracks?"+searchedArtists+"&"+searchedGenres, {
+				var tracks = await fetch("/services/tracks?"+searchedArtists+"&"+searchedGenres+"&limit="+limit, {
 			        method: "GET", // *GET, POST, PUT, DELETE, etc.
 			        mode: "cors", // no-cors, cors, *same-origin
 			        cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
@@ -169,16 +169,16 @@
 			let genreArtistTrackList = document.querySelector("#genreArtistList");
 			genreArtistTrackList.innerHTML = "";
 				
-			let ul = document.createElement("ul");
-			ul.id = "artistSelect";
+			let ol = document.createElement("ol");
+			ol.id = "artistSelect";
 		
 			for(let track of tracks){
 				  var li = document.createElement("li");
 				  li.innerText = track.name;
-				  ul.appendChild(li);
+				  ol.appendChild(li);
 			}
-			genreArtistTrackList.appendChild(ul);
-			ul.firstElementChild.classList.add("played");
+			genreArtistTrackList.appendChild(ol);
+			ol.firstElementChild.classList.add("played");
 			//this.playAudio(tracks[0].identity);
 
 		}

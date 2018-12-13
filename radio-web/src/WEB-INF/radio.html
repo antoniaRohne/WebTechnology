@@ -1,100 +1,103 @@
-<!doctype html>
+<!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
-	<head>
-		<meta charset="utf-8" />
-		<meta name="author" content="Sascha Baumeister" />
-		<meta name="dcterms.rightsHolder" content="Sascha Baumeister" />
-		<meta name="dcterms.rights" content="all rights reserved" />
-		<meta name="dcterms.dateCopyrighted" content="2018" />
+  <head>
+    <meta charset="utf-8" />
+    <meta name="author" content="Sascha Baumeister" />
+    <meta name="dcterms.rightsHolder" content="Sascha Baumeister" />
+    <meta name="dcterms.rights" content="all rights reserved" />
+    <meta name="dcterms.dateCopyrighted" content="2018" />
 
-		<title>Web-Radio</title>
-		<link rel="stylesheet" type="text/css" href="radio.css" />
-		<link rel="icon" type="image/png" href="radio.png"/>
+    <title>Web-Radio</title>
+    <link rel="stylesheet" type="text/css" href="radio.css" />
+    <link rel="icon" type="image/png" href="radio.png" />
 
-		<script src="js/controller.js"></script>
-		<script src="js/welcome-controller.js"></script>
-        <script src="js/server-radio-controller.js"></script>
-        <script src="js/peer-radio-controller.js"></script>
+    <script src="js/controller.js"></script>
+    <script src="js/welcome-controller.js"></script>
+    <script src="js/server-radio-controller.js"></script>
+    <script src="js/peer-radio-controller.js"></script>
 
-		<template id="login-template">
-			<section class="login">
-				<fieldset>
-					<legend>Login</legend>
-					<div>
-						<label class="horizontal">Email</label>
-						<input type="email" required="required" maxlength="128" />
-					</div>
-					<div>
-						<label class="horizontal">Password</label>
-						<input type="password" required="required" maxlength="16" />
-					</div>
-				</fieldset>
-				<button type="button">login</button>
-			</section>
-		</template>
-        
-        <template id="server-radio-template">
-			<section class="genreFilter">
-            <!-- <fieldset>
-                <legend>Pick your favourite genres</legend>
-                <div id ="genreChooser">
-                </div>
-                <button type="button" class="buttonGenreSearch">Search</button>
-            </fieldset>
-            <div id ="genreList">
-            </div>
-     
-             <fieldset>
-                <legend>Pick your favourite artists</legend>
-				<div id ="artistChooser">
-                </div>
-                <button type="button" class="buttonArtistSearch">Search</button>
-            </fieldset>
-            <div id ="artistList">
-			 </div> -->
+    <template id="login-template">
+      <section class="login">
+        <fieldset>
+          <legend>Login</legend>
+          <div>
+            <label class="horizontal">Email</label>
+            <input type="email" required="required" maxlength="128" />
+          </div>
+          <div>
+            <label class="horizontal">Password</label>
+            <input type="password" required="required" maxlength="16" />
+          </div>
+        </fieldset>
+        <button type="button">login</button>
+      </section>
+    </template>
 
+    <template id="server-radio-template">
+      <section class="genreFilter">
+        <!--
+          <fieldset>
+                      <legend>Pick your favourite genres</legend>
+                      <div id ="genreChooser">
+                      </div>
+                      <button type="button" class="buttonGenreSearch">Search</button>
+                  </fieldset>
+                  <div id ="genreList">
+                  </div>
 
+                   <fieldset>
+                      <legend>Pick your favourite artists</legend>
+          <div id ="artistChooser">
+                      </div>
+                      <button type="button" class="buttonArtistSearch">Search</button>
+                  </fieldset>
+                  <div id ="artistList">
+          </div>
+        -->
 
-			 <fieldset>
-                <legend>Pick your favourite genres or artists</legend>
-                <div id ="genreChooser">
-				</div>
-				<div id ="artistChooser">
-                </div>
-                <button type="button" class="buttonGenreArtistSearch">Search</button>
-            </fieldset>
-            <div id ="genreArtistList">
-			</div>
-			
+        <fieldset>
+          <legend>Pick your favourite genres or artists</legend>
+          <div id="genreChooser"></div>
+          <div id="artistChooser"></div>
+          <div class="offset_limit">
+            <label for="offset_limit">Choose number of tracks(1-100):</label>
 
+            <input
+              type="number"
+              id="offset_limit"
+              name="offset_limit"
+              min="1"
+			  max="100"
+			  value="2"
+            />
+          </div>
+          <button type="button" class="buttonGenreArtistSearch">Search</button>
+        </fieldset>
+        <div id="genreArtistList"></div>
+      </section>
+    </template>
+    <template id="peer-radio-template">
+      <div id="chooseModus">
+        <p>Do you want to stream a radio or listen to a peer radio?</p>
+        <button type="button" id="sendButton">Send</button>
+        <button type="button" id="receiveButton">Receive</button>
+      </div>
+    </template>
+  </head>
 
-			
-            </section>
-		</template>
-		 <template id="peer-radio-template">
-		 <div id="chooseModus">
-		 <p>Do you want to stream a radio or listen to a peer radio?</p>
-			<button type="button" id="sendButton">Send</button>
-			<button type="button" id="receiveButton">Receive</button>
-		</div>	
-		</template>
-	</head>
-
-
-	<body>
-		<header>
-			<nav class="horizontal">
-				<ul>
-					<li><a>Login</a></li>
-					<li><a>Server Radio</a></li> <!-- on click display() von server radio controller -->
-					<li><a>Peer Radio</a></li>
-					<li><a>Preferences</a></li>
-				</ul>
-			</nav>
-		</header>
-		<main></main>
-		<footer>
-			<output></output>
-		</footer>
-	</body>
+  <body>
+    <header>
+      <nav class="horizontal">
+        <ul>
+          <li><a>Login</a></li>
+          <li><a>Server Radio</a></li>
+          <!-- on click display() von server radio controller -->
+          <li><a>Peer Radio</a></li>
+          <li><a>Preferences</a></li>
+        </ul>
+      </nav>
+    </header>
+    <main></main>
+    <footer><output></output></footer>
+  </body>
 </html>
