@@ -10,7 +10,6 @@
 
 	var audioContext;
 
-
 	/**
 	 * Creates a new welcome controller that is derived from an abstract controller.
 	 */
@@ -51,7 +50,6 @@
 			}
 		}
 	});
-
 	
 	async function playAudio(identity){
 		try {
@@ -102,6 +100,72 @@
 	    return uint8Array;
 	}
 
-    anchor.dispatchEvent(new MouseEvent('click'));
-  });
+	/**
+	 * 
+	 */
+	Object.defineProperty(ServerRadioController.prototype, "search", {
+		enumerable: false,
+		configurable: false,
+		value: async function () {
+			this.displayError();
 
+			try {
+				var checkboxes = document.querySelectorAll("input[type='checkbox']");
+				var searchedGenres = "";
+                for(var i = 0; i < checkboxes.length; i++) {
+                	if(checkboxes[i].checked == true){
+                		searchedGenres+="genre="+checkboxes[i].id+"&";
+                	}
+                }
+                searchedGenres = searchedGenres.slice(0, -1);
+           
+                console.log (searchedGenres);
+				//FETCH!
+				var tracks = await fetch("/services/tracks?"+searchedGenres, {
+			        method: "GET", // *GET, POST, PUT, DELETE, etc.
+			        mode: "cors", // no-cors, cors, *same-origin
+			        cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
+			        credentials: "include", // include, *same-origin, omit
+			        headers: {
+			              'Accept': 'application/json',
+					'Content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
+			        },
+			        //body: JSON.stringify(data), // body data type must match "Content-Type" header
+			    }).then(res => res.json()).catch(function (error) {
+			        console.log(error);
+			       });
+				console.log(tracks);
+				
+			} catch (error) {
+				this.displayError(error);
+			}
+			
+			let listOfTracks = document.querySelector("#listOfTracks");
+			while (listOfTracks.lastChild) { //Lösche alle vorherigen Einträge
+				listOfTracks.removeChild(listOfTracks.lastChild);
+			}
+			for(let track of tracks){
+				  var li = document.createElement("li");
+				  li.appendChild(document.createTextNode(track.name));
+				  listOfTracks.appendChild(li);
+			}
+			
+			//var player = document.querySelector("#player");
+			//player.src = "/services/documents/45";
+			playAudio(tracks[0].identity);
+		}
+	});
+
+	/**
+	 * Perform controller callback registration during DOM load event handling.
+	 */
+	window.addEventListener("load", event => {
+		const anchor = document.querySelector("header li:nth-of-type(1) > a");
+		const controller = new ServerRadioController();
+		anchor.addEventListener("click", event => controller.display());
+
+		anchor.dispatchEvent(new MouseEvent("click"));
+	});
+	
+    
+} ());
