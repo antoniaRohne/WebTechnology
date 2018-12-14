@@ -113,6 +113,7 @@ nav li {
 
 nav.horizontal li {
   display: inline-block;
+  cursor: pointer;
 }
 
 nav a {

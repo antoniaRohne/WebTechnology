@@ -44,7 +44,7 @@
           .catch(function(error) {
             console.log(error);
           });
-        console.log('tracks : ', genres);
+      
 
         //	var artists = JSON.parse(await this.xhr("/services/tracks/artists", "GET", {"Accept": "application/json"}, "", "text", "ines.bergmann@web.de", "ines"));
         var artists = await fetch('/services/tracks/artists', {
@@ -59,7 +59,7 @@
           .catch(function(error) {
             console.log(error);
           });
-        console.log('artists ', artists);
+    
       } catch (error) {
         this.displayError(error);
       }
