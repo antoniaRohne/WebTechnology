@@ -3,10 +3,6 @@
 (function () {
 	// imports
 	const Controller = de_sb_radio.Controller;
-
-	const signaling = new SignalingChannel(); // handles JSON.stringify/parse
-	const constraints = {audio: true, video: true};
-	const configuration = {iceServers: [{urls: 'stuns:stun.example.org'}]};
 	
 	let localConnection;
 	let remoteConnection;
@@ -158,45 +154,9 @@
 		}
 	});
 	
-	// send any ice candidates to the other peer
-	localConnection.onicecandidate = ({candidate}) => signaling.send({candidate});
-
-	// let the "negotiationneeded" event trigger offer generation
-	localConnection.onnegotiationneeded = async () => {
-	  try {
-	    await localConnection.setLocalDescription(await localConnection.createOffer());
-	    // send the offer to the other peer
-	    signaling.send({desc: localConnection.localDescription});
-	  } catch (err) {
-	    console.error(err);
-	  }
-	};
-
-	// once media for a remote track arrives, show it in the remote video element
 	localConnection.ontrack = (event) => {
 		console.log("on track");
 	}
-	
-	signaling.onmessage = async ({desc, candidate}) => {
-		  try {
-		    if (desc) {
-		      // if we get an offer, we need to reply with an answer
-		      if (desc.type == 'offer') {
-		        await localConnection.setRemoteDescription(desc);
-		        await localConnection.setLocalDescription(await localConnection.createAnswer());
-		        signaling.send({desc: localConnection.localDescription});
-		      } else if (desc.type == 'answer') {
-		        await localConnection.setRemoteDescription(desc);
-		      } else {
-		        console.log('Unsupported SDP type. Your code may differ here.');
-		      }
-		    } else if (candidate) {
-		      await localConnection.addIceCandidate(candidate);
-		    }
-		  } catch (err) {
-		    console.error(err);
-		  }
-		};
 	
 	Object.defineProperty(PeerRadioController.prototype, "playNext", {
 		enumerable: false,
@@ -283,33 +243,6 @@
 		  remoteConnection.setLocalDescription(desc);
 		  console.log('Answer from remoteConnection:\n', desc.sdp);
 		  localConnection.setRemoteDescription(desc);
-	}
-	
-	function sendData() {
-		  // Stop scheduled timer if any (part of the workaround introduced below)
-		  if (timeoutHandle !== null) {
-		    clearTimeout(timeoutHandle);
-		    timeoutHandle = null;
-		  }
-
-		  while (sendProgress.value < sendProgress.max) {
-			console.log('Sending data...');
-		    sendChannel.send("HI");
-		    bufferedAmount += chunkSize;
-		    sendProgress.value += chunkSize;
-		    console.log(`Sent ${sendProgress.value}/${sendProgress.max}`);
-
-		    // Pause sending if we reach the high water mark
-		    if (bufferedAmount >= highWaterMark) {
-		      // This is a workaround due to the bug that all browsers are incorrectly calculating the
-		      // amount of buffered data. Therefore, the 'bufferedamountlow' event would not fire.
-		      if (sendChannel.bufferedAmount < lowWaterMark) {
-		        timeoutHandle = setTimeout(() => sendData(), 0);
-		      }
-		      console.log(`Paused sending, buffered amount: ${bufferedAmount} (announced: ${sendChannel.bufferedAmount})`);
-		      break;
-		    }
-		  }
 	}
 	
 	function onReceiveChannelClosed() {
