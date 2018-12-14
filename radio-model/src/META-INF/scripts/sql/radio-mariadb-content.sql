@@ -66,5 +66,3 @@ INSERT INTO BaseEntity VALUES (0, "Track", 1, UNIX_TIMESTAMP()*1000);
 SET @id = LAST_INSERT_ID();
 INSERT INTO Track VALUES (@id, 6, 2, 1,"The Nights", "Avicii", "Electronic", 5);
 
-SELECT identity, discriminator, email, HEX(contentHash) from JoinedEntity;
-
