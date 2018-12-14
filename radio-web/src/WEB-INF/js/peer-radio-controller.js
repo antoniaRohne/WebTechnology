@@ -107,7 +107,7 @@
 			
 			mainElement.appendChild(fileList);
 			
-			localConnection = new RTCPeerConnection(configurations);
+			localConnection = new RTCPeerConnection();
 
 			sendChannel = localConnection.createDataChannel("sendChannel");
 			sendChannel.addEventListener('open', onSendChannelOpen);
@@ -128,7 +128,7 @@
 			        source.start(0);
 					//.addEventListener("ended", this.playNext);
 			        source.connect(context.destination);
-			        mainElement.querySelector("ul").childNodes[nextId].classList.add("selected");
+			        mainElement.querySelector("ul").childNodes[nextId].classList.add("played");
 			        
 			        var remote = context.createMediaStreamDestination();
 			 
@@ -153,10 +153,6 @@
 			}*/
 		}
 	});
-	
-	localConnection.ontrack = (event) => {
-		console.log("on track");
-	}
 	
 	Object.defineProperty(PeerRadioController.prototype, "playNext", {
 		enumerable: false,
