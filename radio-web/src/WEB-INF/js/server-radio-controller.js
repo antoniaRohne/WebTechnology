@@ -128,6 +128,7 @@
           source.connect(audioContext.destination);
           source.start();
         });
+        
       } catch (error) {
         this.displayError(error);
       }
@@ -210,7 +211,7 @@
       }
       genreArtistTrackList.appendChild(ol);
       ol.firstElementChild.classList.add('played');
-      this.playAudio(tracks[0].identity);
+      this.playAudio(tracks[0].recordingReference);
     }
   });
 
