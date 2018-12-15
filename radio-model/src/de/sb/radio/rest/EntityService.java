@@ -133,7 +133,7 @@ public class EntityService {
 	 * order to set both using the document's content and content-type.
 	 **/
 	@GET
-	@Path("f/{id}")
+	@Path("/{id}")
 	@Produces(MediaType.WILDCARD)
 	public Response queryDocument(
 		@PathParam("id") @Positive final long documentIdentity,
