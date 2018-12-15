@@ -44,7 +44,6 @@
           .catch(function(error) {
             console.log(error);
           });
-      
 
         //	var artists = JSON.parse(await this.xhr("/services/tracks/artists", "GET", {"Accept": "application/json"}, "", "text", "ines.bergmann@web.de", "ines"));
         var artists = await fetch('/services/tracks/artists', {
@@ -59,7 +58,6 @@
           .catch(function(error) {
             console.log(error);
           });
-    
       } catch (error) {
         this.displayError(error);
       }
@@ -114,7 +112,7 @@
     configurable: false,
     value: async function(identity) {
       try {
-        let response = await fetch('/services/documents/49', {
+        let response = await fetch('/services/documents/' + identity, {
           method: 'GET', // *GET, POST, PUT, DELETE, etc.
           credentials: 'include', // include, *same-origin, omit
           headers: { Accept: 'audio/*' }
@@ -170,7 +168,7 @@
         var limit = document.querySelector('#offset_limit').value;
         console.log('limit is now:', limit + ' songs');
         //FETCH!
-        var tracks = await fetch(
+        var response = await fetch(
           '/services/tracks?' +
             searchedArtists +
             '&' +
@@ -188,11 +186,12 @@
             }
             //body: JSON.stringify(data), // body data type must match "Content-Type" header
           }
-        )
-          .then(res => res.json())
-          .catch(function(error) {
-            console.log(error);
-          });
+        );
+        if (!response.ok())
+          throw new Error(response.status + ' ' + response.statusText);
+
+        let tracks = await response.json();
+
         console.log(tracks);
       } catch (error) {
         this.displayError(error);
@@ -203,7 +202,7 @@
 
       let ol = document.createElement('ol');
       ol.id = 'artistSelect';
-
+      tracks = shuffle(tracks);
       for (let track of tracks) {
         var li = document.createElement('li');
         li.innerText = track.name;
@@ -211,7 +210,7 @@
       }
       genreArtistTrackList.appendChild(ol);
       ol.firstElementChild.classList.add('played');
-      //this.playAudio(tracks[0].identity);
+      this.playAudio(tracks[0].identity);
     }
   });
 
@@ -223,4 +222,12 @@
     const controller = new ServerRadioController();
     anchor.addEventListener('click', event => controller.display());
   });
+
+  function shuffle(a) {
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
 })();

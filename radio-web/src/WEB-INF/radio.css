@@ -241,6 +241,20 @@ section.messages textarea {
 #artistChooser label, #genreChooser label{
 margin: 5px 15px;
 }
+#artistSelect{
+	overflow: hidden;
+    overflow-y: scroll;
+    max-height: 120px;
+    background-color: aliceblue;
+    background-color: white;
+    padding: 20px 30px;
+}
+#artistSelect li{
+	box-shadow: 0px 0px 1px black;
+	padding: 1px 5px;
+	margin-bottom: 1px;
+
+}
 
 .offset_limit{
 	margin: 10px 0;
