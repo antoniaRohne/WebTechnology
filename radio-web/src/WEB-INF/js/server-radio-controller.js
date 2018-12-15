@@ -142,7 +142,7 @@
     configurable: false,
     value: async function() {
       this.displayError();
-
+      var tracks = [];
       try {
         //	Get array of all picked artists
         var artistDiv = document.querySelector('#artistChooser');
@@ -187,10 +187,10 @@
             //body: JSON.stringify(data), // body data type must match "Content-Type" header
           }
         );
-        if (!response.ok())
+        if (!response.ok)
           throw new Error(response.status + ' ' + response.statusText);
 
-        let tracks = await response.json();
+         tracks = await response.json();
 
         console.log(tracks);
       } catch (error) {
