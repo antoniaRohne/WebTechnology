@@ -10,6 +10,10 @@
 
   let AUDIO_CONTEXT = window.AudioContext || window.webkitAudioContext;
   let audioContext = new AUDIO_CONTEXT();
+  
+  var source = null;
+  var myAudio = document.querySelector('audio');
+  var gainNode = null;
 
   /**
    * Creates a new welcome controller that is derived from an abstract controller.
@@ -104,6 +108,25 @@
         myL.appendChild(myC);
         artistDiv.appendChild(myL);
       }
+      
+      var volumeSlider = document.getElementById("volumeRange");
+      var volumeValue = document.getElementById("volumeValue");
+      volumeValue.innerHTML = volumeSlider.value;
+      
+      volumeSlider.oninput = function() {
+    	  volumeValue.innerHTML = parseInt((this.value * 50),10);
+    	  gainNode.gain.value = this.value;
+      }
+    	
+      var compressionSlider = document.getElementById("compressionRange");
+      var compressionValue = document.getElementById("compressionValue");
+      compressionValue.innerHTML = compressionSlider.value;
+      
+      compressionSlider.oninput = function() {
+    	  compressionValue.innerHTML = this.value;
+      }
+      
+      
     }
   });
 
@@ -119,14 +142,19 @@
         });
 
         let buffer = await response.arrayBuffer();
-        let source = audioContext.createBufferSource();
+        
+        if(source != null)
+        	source.stop(0);
+        source = audioContext.createBufferSource();
+        gainNode = audioContext.createGain();
+        source.connect(gainNode);
+        gainNode.connect(audioContext.destination);
 
         audioContext.decodeAudioData(buffer, decodedData => {
           //Alternative await decodeAudioData
           source.loop = false;
           source.buffer = decodedData;
-          source.connect(audioContext.destination);
-          source.start();
+          source.start(0);
         });
         
       } catch (error) {
@@ -211,7 +239,9 @@
       }
       genreArtistTrackList.appendChild(ol);
       ol.firstElementChild.classList.add('played');
-      this.playAudio(tracks[0].recordingReference);
+      //this.playAudio(tracks[0].recordingReference);
+      // Please change this id to one which you have.
+      this.playAudio(23);
     }
   });
 
