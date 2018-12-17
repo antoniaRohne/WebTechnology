@@ -15,10 +15,17 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
+import javax.sound.sampled.AudioFileFormat;
+import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 
+import de.sb.radio.processor.AudioOutputStream;
+import de.sb.radio.processor.Compressor;
+import de.sb.radio.processor.Processor;
 import de.sb.toolbox.Copyright;
 import de.sb.toolbox.bind.JsonProtectedPropertyStrategy;
 
@@ -191,4 +198,132 @@ public class Document extends BaseEntity {
 	}
 	
 	//Compression method
+	public static byte[] myCompressor(byte[] content, double compressionRatio) {
+		
+		final Processor processor = new Compressor(compressionRatio);
+		byte[] frameBuffer = new byte[WAV_FORMAT.getFrameSize()]; //Framegröße oder vielfaches von Framegröße
+		final double[] frame = new double[WAV_FORMAT.getChannels()]; //Zweite Variante mit normalisierter Form -1 bis 1
+		int i = 0;
+		// only works if we miss content from the starting (not sure it's correct or not)
+		for (i = 3000; i < content.length/frameBuffer.length; i++) {
+			
+			//frameBuffer = Arrays.copyOfRange(content, i, i + frameBuffer.length);
+			
+			System.arraycopy(content, i * frameBuffer.length, frameBuffer, 0, frameBuffer.length);
+			
+			if (processor != null) { //Habe ich ein Soundprozessor der überarbeitet
+				for (int channel = 0; channel < frame.length; ++channel) {
+					frame[channel] = unpackNormalizedSample(frameBuffer, 2 * channel); //unpackNormalizedSample = binär in double 
+				}
+
+				processor.process(frame);
+
+				for (int channel = 0; channel < frame.length; ++channel) {
+					packNormalizedSample(frameBuffer, 2 * channel, frame[channel]); //unpackNormalizedSample wird wieder rückgängig gemacht
+				}
+			}
+			
+			//System.out.println(i);
+			System.arraycopy(frameBuffer, 0, content, i * frameBuffer.length, frameBuffer.length);
+		}
+		
+		if((i*frameBuffer.length) < content.length) {
+			int diff = content.length - (i*frameBuffer.length);
+			frameBuffer = new byte[WAV_FORMAT.getFrameSize()];
+			System.arraycopy(content, i * frameBuffer.length, frameBuffer, 0, diff);
+			
+			if (processor != null) { //Habe ich ein Soundprozessor der überarbeitet
+				for (int channel = 0; channel < frame.length; ++channel) {
+					frame[channel] = unpackNormalizedSample(frameBuffer, 2 * channel); //unpackNormalizedSample = binär in double 
+				}
+
+				processor.process(frame);
+
+				for (int channel = 0; channel < frame.length; ++channel) {
+					packNormalizedSample(frameBuffer, 2 * channel, frame[channel]); //unpackNormalizedSample wird wieder rückgängig gemacht
+				}
+			}
+			
+			//System.out.println(i);
+			System.arraycopy(frameBuffer, 0, content, i * frameBuffer.length, diff);
+		}
+		
+		return content;
+		
+	}
+
+	// compression method - other way
+	public static byte[] myCompressor1(byte[] content, double compressionRatio) throws IOException, UnsupportedAudioFileException {
+		
+		ByteArrayInputStream bais = new ByteArrayInputStream(content);
+		ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+		
+		final Processor processor = new Compressor(compressionRatio);
+		
+		//final Path audioSinkPath = Paths.get("temp.wav");
+		try (AudioOutputStream audioSink = AudioOutputStream.newAudioOutputStream(WAV_FORMAT, AudioFileFormat.Type.WAVE, byteArrayOutputStream)) {
+			
+			try (AudioInputStream audioSource = new AudioInputStream(bais, WAV_FORMAT, content.length)) {
+				
+				final byte[] frameBuffer = new byte[WAV_FORMAT.getFrameSize()]; //Framegröße oder vielfaches von Framegröße
+				final double[] frame = new double[WAV_FORMAT.getChannels()]; //Zweite Variante mit normalisierter Form -1 bis 1
+				
+				for (int bytesRead = audioSource.read(frameBuffer); bytesRead == frameBuffer.length; bytesRead = audioSource.read(frameBuffer)) {
+					if (processor != null) { //Habe ich ein Soundprozessor der überarbeitet
+						for (int channel = 0; channel < frame.length; ++channel) {
+							frame[channel] = unpackNormalizedSample(frameBuffer, 2 * channel); //unpackNormalizedSample = binär in double 
+						}
+		
+						processor.process(frame);
+		
+						for (int channel = 0; channel < frame.length; ++channel) {
+							packNormalizedSample(frameBuffer, 2 * channel, frame[channel]); //unpackNormalizedSample wird wieder rückgängig gemacht
+						}
+					}
+
+					byteArrayOutputStream.write(frameBuffer);
+					//audioSink.write(frameBuffer);
+			
+				}
+				
+				return byteArrayOutputStream.toByteArray();
+			}
+		}
+			
+	}
+		
+	private static final AudioFormat WAV_FORMAT = new AudioFormat(44100, 16, 2, true, false);
+	
+	/**
+	 * Unpacks a normalized sample value within range [-1, +1] from the given
+	 * frame buffer.
+	 * @param frameBuffer the frame buffer
+	 * @param offset the sample offset
+	 * @return the unpacked and normalized sample 
+	 * @throws NullPointerException if the given frame buffer is {@code null}
+	 * @throws ArrayIndexOutOfBoundsException if the given offset is out of bounds
+	 */
+	static private double unpackNormalizedSample (byte[] frameBuffer, int offset) throws ArrayIndexOutOfBoundsException {
+		final double sample = (frameBuffer[offset] & 0xFF) + (frameBuffer[offset + 1] << 8);
+		return sample >= 0 ? +sample / Short.MAX_VALUE : -sample / Short.MIN_VALUE;
+	}
+
+
+
+	/**
+	 * Packs a normalized sample value within range [-1, +1] into the given
+	 * frame buffer.
+	 * @param frameBuffer the frame buffer
+	 * @param offset the sample offset
+	 * @param the normalized sample to be packed 
+	 * @throws NullPointerException if the given frame buffer is {@code null}
+	 * @throws ArrayIndexOutOfBoundsException if the given offset is out of bounds
+	 */
+	static private void packNormalizedSample (byte[] frameBuffer, int offset, double sample) throws ArrayIndexOutOfBoundsException {
+		sample	= sample >= -1 ? (sample <= +1 ? sample : +1) : -1;
+
+		final long value = Math.round(sample >= 0 ? +sample * Short.MAX_VALUE : -sample * Short.MIN_VALUE);
+		frameBuffer[offset]		= (byte) (value >>> 0);	// pack LSB
+		frameBuffer[offset + 1]	= (byte) (value >>> 8); // pack HSB
+	}
 }

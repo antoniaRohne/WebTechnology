@@ -149,12 +149,23 @@ public class EntityService {
 		byte[] content = document.getContent();
 		String contentType = document.getContentType();
 		
-		if(contentType.startsWith("image/")){
+		if(contentType.startsWith("image/")) {
 			//checken height, width != 0
 			//=> content = image scaledImageContent von Document
-		}else if(contentType.startsWith("audio/")) {
+		} else if(contentType.startsWith("audio/") || contentType.startsWith("music/")) {
 			//checken compression ratio !=0
 			//content = audio -> compression
+			if(audioCompressionRatio != null) {
+				if(audioCompressionRatio != 0) {
+					content = Document.myCompressor(content, audioCompressionRatio);
+				}
+			}
+			
+			// just for testing, even compression ratio is not specified
+			if(audioCompressionRatio == null) {
+				content = Document.myCompressor(content, 3);
+			}
+			
 		}
 
 		return Response.ok(content, contentType).build();
