@@ -33,10 +33,11 @@
     writable: true,
     value: async function() {
       this.displayError();
+      var genres,artists = [];
 
       try {
         //var genres = JSON.parse(await this.xhr("/services/tracks/genres?offset=0&limit=100", "GET", {"Accept": "application/json"}, "", "text", "ines.bergmann@web.de", "ines"));
-        var genres = await fetch('/services/tracks/genres?offset=0&limit=100', {
+        var response = await fetch('/services/tracks/genres?offset=0&limit=100', {
           method: 'GET', // *GET, POST, PUT, DELETE, etc.
           credentials: 'include', // include, *same-origin, omit
           headers: {
@@ -44,13 +45,12 @@
             'Content-type': 'application/x-www-form-urlencoded; charset=UTF-8'
           }
         })
-          .then(res => res.json())
-          .catch(function(error) {
-            console.log(error);
-          });
+        if (!response.ok)
+            throw new Error(response.status + ' ' + response.statusText);
 
+        genres = await response.json();
         //	var artists = JSON.parse(await this.xhr("/services/tracks/artists", "GET", {"Accept": "application/json"}, "", "text", "ines.bergmann@web.de", "ines"));
-        var artists = await fetch('/services/tracks/artists', {
+        response = await fetch('/services/tracks/artists', {
           method: 'GET', // *GET, POST, PUT, DELETE, etc.
           credentials: 'include', // include, *same-origin, omit
           headers: {
@@ -58,10 +58,11 @@
             'Content-type': 'application/x-www-form-urlencoded; charset=UTF-8'
           }
         })
-          .then(res => res.json())
-          .catch(function(error) {
-            console.log(error);
-          });
+        if (!response.ok)
+            throw new Error(response.status + ' ' + response.statusText);
+
+        artists = await response.json();
+        
       } catch (error) {
         this.displayError(error);
       }
@@ -71,52 +72,53 @@
         document.querySelector('#server-radio-template').content.cloneNode(true)
           .firstElementChild
       );
+      mainElement.appendChild(
+    	        document.querySelector('#playlist-radio-template').content.cloneNode(true)
+    	          .firstElementChild
+      );
       mainElement
         .querySelector('.buttonGenreArtistSearch')
         .addEventListener('click', event => this.searchArtistGenre());
 
       var genreDiv = mainElement.querySelector('#genreChooser');
 
+     
+     var mySelect = document.createElement('select');
+     mySelect.multiple = true;
+     mySelect.name = "genre"
+     var h2 = document.createElement('h2');
+     h2.innerHTML = "Genres";
+     genreDiv.appendChild(h2);
       for (let i = 0; i < genres.length; i++) {
-        var myC = null;
-        var myL = null;
+        var myOption = null;
+        
 
-        myC = document.createElement('INPUT');
-        myC.type = 'checkbox';
-        myC.checked = false;
-        myC.id = genres[i];
-        myL = document.createElement('LABEL');
-        myL.innerHTML = genres[i];
-
-        myL.appendChild(myC);
-        genreDiv.appendChild(myL);
+        myOption = document.createElement('option');
+        myOption.value = genres[i];
+        myOption.text = genres[i];
+        mySelect.appendChild(myOption);
+     
       }
+      genreDiv.appendChild(mySelect);
 
       var artistDiv = mainElement.querySelector('#artistChooser');
-
+      var h2 = document.createElement('h2');
+      h2.innerHTML = "Artists";
+      artistDiv.appendChild(h2);
+      mySelect = document.createElement('select');
+      mySelect.multiple = true;
+      mySelect.name = "artist";
       for (let i = 0; i < artists.length; i++) {
-        var myC = null;
-        var myL = null;
-
-        myC = document.createElement('INPUT');
-        myC.type = 'checkbox';
-        myC.checked = false;
-        myC.id = artists[i];
-        myL = document.createElement('LABEL');
-        myL.innerHTML = artists[i];
-
-        myL.appendChild(myC);
-        artistDiv.appendChild(myL);
+        var myOption = null;
+        myOption = document.createElement('option');
+        myOption.value = artists[i];
+        myOption.text = artists[i];
+        mySelect.appendChild(myOption);
+     
       }
+      artistDiv.appendChild(mySelect);
       
-      var volumeSlider = document.getElementById("volumeRange");
-      var volumeValue = document.getElementById("volumeValue");
-      volumeValue.innerHTML = volumeSlider.value;
-      
-      volumeSlider.oninput = function() {
-    	  volumeValue.innerHTML = parseInt((this.value * 50),10);
-    	  gainNode.gain.value = this.value;
-      }
+     
     	
       var compressionSlider = document.getElementById("compressionRange");
       var compressionValue = document.getElementById("compressionValue");
@@ -140,6 +142,8 @@
           credentials: 'include', // include, *same-origin, omit
           headers: { Accept: 'audio/*' }
         });
+        if (!response.ok)
+            throw new Error(response.status + ' ' + response.statusText);
 
         let buffer = await response.arrayBuffer();
         
@@ -149,6 +153,15 @@
         gainNode = audioContext.createGain();
         source.connect(gainNode);
         gainNode.connect(audioContext.destination);
+        
+        var volumeSlider = document.getElementById("volumeRange");
+        var volumeValue = document.getElementById("volumeValue");
+        volumeValue.innerHTML = volumeSlider.value;
+        
+        volumeSlider.oninput = function() {
+      	  volumeValue.innerHTML = parseInt((this.value * 50),10);
+      	  gainNode.gain.value = this.value;
+        }
 
         audioContext.decodeAudioData(buffer, decodedData => {
           //Alternative await decodeAudioData
@@ -156,6 +169,7 @@
           source.buffer = decodedData;
           source.start(0);
         });
+        
         
       } catch (error) {
         this.displayError(error);
@@ -174,26 +188,32 @@
       var tracks = [];
       try {
         //	Get array of all picked artists
-        var artistDiv = document.querySelector('#artistChooser');
-        var checkboxes = artistDiv.querySelectorAll("input[type='checkbox']");
+      
+        var first_options = document.querySelectorAll("#artistChooser select option:checked");
+       
         var searchedArtists = '';
-        for (var i = 0; i < checkboxes.length; i++) {
-          if (checkboxes[i].checked == true) {
-            searchedArtists += 'artist=' + checkboxes[i].id + '&';
-          }
+        if(first_options.length>0){
+	        for (var i = 0; i < first_options.length; i++) {
+	       
+	            searchedArtists += 'artist=' + first_options[i].value + '&';
+	        }
         }
         searchedArtists = searchedArtists.slice(0, -1);
-
+        
+        console.log("searhedArtists: ", searchedArtists);
         //	Get array of all picked genres
-        var genreDiv = document.querySelector('#genreChooser');
-        var checkboxes = genreDiv.querySelectorAll("input[type='checkbox']");
+        
+        var second_options = document.querySelectorAll("#genreChooser select option:checked");
         var searchedGenres = '';
-        for (var i = 0; i < checkboxes.length; i++) {
-          if (checkboxes[i].checked == true) {
-            searchedGenres += 'genre=' + checkboxes[i].id + '&';
-          }
+        if(second_options.length>0){
+	        for (var i = 0; i < second_options.length; i++) {
+	            searchedGenres += 'genre=' + second_options[i].value + '&';
+	        }
         }
         searchedGenres = searchedGenres.slice(0, -1);
+        
+        console.log("searchedGenres: ", searchedGenres);
+        
         var limit = document.querySelector('#offset_limit').value;
         console.log('limit is now:', limit + ' songs');
         //FETCH!
@@ -232,16 +252,25 @@
       let ol = document.createElement('ol');
       ol.id = 'artistSelect';
       tracks = shuffle(tracks);
-      for (let track of tracks) {
-        var li = document.createElement('li');
-        li.innerText = track.name;
-        ol.appendChild(li);
+      if (tracks.length>0){
+    	  for (let track of tracks) {
+    	        var li = document.createElement('li');
+    	      
+    	        li.innerText = track.name;
+    	        ol.appendChild(li);
+    	      }
+    	     
+    	      ol.firstChild.classList.add("played")
+    	      //this.playAudio(tracks[0].recordingReference);
+    	      // Please change this id to one which you have.
+    	      this.playAudio(23);
+      }else{
+    	  var li = document.createElement('i');
+	      
+	        li.innerText = "No Tracks";
+	        ol.appendChild(li);
       }
       genreArtistTrackList.appendChild(ol);
-      ol.firstElementChild.classList.add('played');
-      //this.playAudio(tracks[0].recordingReference);
-      // Please change this id to one which you have.
-      this.playAudio(23);
     }
   });
 

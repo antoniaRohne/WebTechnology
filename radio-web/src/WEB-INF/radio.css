@@ -298,3 +298,25 @@ margin: 5px 15px;
   background: #A9A9A9;
   cursor: pointer;
 }
+
+select:required:invalid {
+  color: gray;
+}
+option[value=""][disabled] {
+  display: none;
+}
+option {
+  color: black;
+}
+
+.container{
+display: flex;	
+}
+#genreChooser ,#artistChooser{
+	width:100%;
+	margin: 10px 10px;
+}
+#genreChooser select,#artistChooser select{
+	min-width: 200px;
+	width: 100%;
+}
