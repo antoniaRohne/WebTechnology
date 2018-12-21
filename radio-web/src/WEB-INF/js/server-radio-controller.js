@@ -10,7 +10,7 @@
 
   let AUDIO_CONTEXT = window.AudioContext || window.webkitAudioContext;
   let audioContext = new AUDIO_CONTEXT();
-  
+
   var source = null;
   var myAudio = document.querySelector('audio');
   var gainNode = null;
@@ -62,7 +62,7 @@
             throw new Error(response.status + ' ' + response.statusText);
 
         artists = await response.json();
-        
+
       } catch (error) {
         this.displayError(error);
       }
@@ -81,6 +81,7 @@
         .addEventListener('click', event => this.searchArtistGenre());
 
       var genreDiv = mainElement.querySelector('#genreChooser');
+
 
       // rewrite basic option "multiple" behavior , so we can click multiple option at once
       window.onmousedown = function (e) {
@@ -112,13 +113,13 @@
      genreDiv.appendChild(h2);
       for (let i = 0; i < genres.length; i++) {
         var myOption = null;
-        
+
 
         myOption = document.createElement('option');
         myOption.value = genres[i];
         myOption.text = genres[i];
         mySelect.appendChild(myOption);
-     
+
       }
       genreDiv.appendChild(mySelect);
 
@@ -136,21 +137,21 @@
         myOption.value = artists[i];
         myOption.text = artists[i];
         mySelect.appendChild(myOption);
-     
+
       }
       artistDiv.appendChild(mySelect);
-      
-     
-    	
+
+
+
       var compressionSlider = document.getElementById("compressionRange");
       var compressionValue = document.getElementById("compressionValue");
       compressionValue.innerHTML = compressionSlider.value;
-      
+
       compressionSlider.oninput = function() {
     	  compressionValue.innerHTML = this.value;
       }
-      
-      
+
+
     }
   });
 
@@ -168,18 +169,18 @@
             throw new Error(response.status + ' ' + response.statusText);
 
         let buffer = await response.arrayBuffer();
-        
+
         if(source != null)
         	source.stop(0);
         source = audioContext.createBufferSource();
         gainNode = audioContext.createGain();
         source.connect(gainNode);
         gainNode.connect(audioContext.destination);
-        
+
         var volumeSlider = document.getElementById("volumeRange");
         var volumeValue = document.getElementById("volumeValue");
         volumeValue.innerHTML = volumeSlider.value;
-        
+
         volumeSlider.oninput = function() {
       	  volumeValue.innerHTML = parseInt((this.value * 50),10);
       	  gainNode.gain.value = this.value;
@@ -191,8 +192,10 @@
           source.buffer = decodedData;
           source.start(0);
         });
-        
-        
+
+        //var lyricsText = document.getElementById("lyricsText");
+
+
       } catch (error) {
         this.displayError(error);
       }
@@ -210,21 +213,21 @@
       var tracks = [];
       try {
         //	Get array of all picked artists
-      
+
         var first_options = document.querySelectorAll("#artistChooser select option:checked");
-       
+
         var searchedArtists = '';
         if(first_options.length>0){
 	        for (var i = 0; i < first_options.length; i++) {
-	       
+
 	            searchedArtists += 'artist=' + first_options[i].value + '&';
 	        }
         }
         searchedArtists = searchedArtists.slice(0, -1);
-        
+
         console.log("searhedArtists: ", searchedArtists);
         //	Get array of all picked genres
-        
+
         var second_options = document.querySelectorAll("#genreChooser select option:checked");
         var searchedGenres = '';
         if(second_options.length>0){
@@ -233,9 +236,9 @@
 	        }
         }
         searchedGenres = searchedGenres.slice(0, -1);
-        
+
         console.log("searchedGenres: ", searchedGenres);
-        
+
         var limit = document.querySelector('#offset_limit').value;
         console.log('limit is now:', limit + ' songs');
         //FETCH!
@@ -272,30 +275,67 @@
       genreArtistTrackList.innerHTML = '';
     
 
+
+      var artistAndTrack = document.getElementById("artistAndTrack");
+      var lyricsText = document.getElementById("lyricsText");
       let ol = document.createElement('ol');
       ol.id = 'artistSelect';
       ol.classList.add("customScrollBar");
       tracks = shuffle(tracks);
       if (tracks.length>0){
     	  for (let track of tracks) {
-    	        var li = document.createElement('li');
-    	        
+    	        var li = document.createElement('li');   
     	        li.innerText = track.artist + " - "+ track.name;
-    	        
     	        ol.appendChild(li);
     	      }
-    	     
+
     	      ol.firstChild.classList.add("played")
     	      //this.playAudio(tracks[0].recordingReference);
     	      // Please change this id to one which you have.
     	      this.playAudio(23);
+
+
       }else{
     	  var li = document.createElement('i');
-	      
+
 	        li.innerText = "No Tracks";
 	        ol.appendChild(li);
+
+          artistAndTrack.innerHTML = "Lyrics :";
+          lyricsText.innerHTML = "no lyrics";
       }
       genreArtistTrackList.appendChild(ol);
+
+
+      //lyrics for the first song in the list
+      let artist = tracks[0].artist;
+      let trackName = tracks[0].name;
+
+      try {
+        const lyrics = await this.queryLyrics(artist, trackName);
+        console.log(lyrics);
+        artistAndTrack.innerHTML = "Lyrics for " + artist + ", " + trackName;
+        lyricsText.innerHTML = lyrics.result.track.text;
+      } catch (error) {
+        this.displayError(error);
+        lyricsText.innerHTML = "no such song found in database";
+      }
+
+    }
+  });
+
+  Object.defineProperty(ServerRadioController.prototype, 'queryLyrics', {
+    enumerable: false,
+    configurable: false,
+    value: async function(artist,trackName) {
+      const apikey = "9rKTnZBFvEFwSc6eZHA7a7G7mXsrMyIgu7R4L015Lzv9MG8Af4J3OoI0TJ8VB8xs";
+      const resource = "https://orion.apiseeds.com/api/music/lyric/" + artist + "/" + trackName + "?apikey=" + apikey;
+
+      let response = await fetch(resource, { method: 'GET', headers: {"Accept": "application/json"} } );
+      if (!response.ok) throw new Error(response.status + ' ' + response.statusText);
+
+      const lyrics = await response.json();
+      return lyrics;
     }
   });
 
