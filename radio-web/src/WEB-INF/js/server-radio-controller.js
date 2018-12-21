@@ -279,8 +279,9 @@
       if (tracks.length>0){
     	  for (let track of tracks) {
     	        var li = document.createElement('li');
-    	      
-    	        li.innerText = track.name;
+    	        
+    	        li.innerText = track.artist + " - "+ track.name;
+    	        
     	        ol.appendChild(li);
     	      }
     	     
