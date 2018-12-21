@@ -82,10 +82,31 @@
 
       var genreDiv = mainElement.querySelector('#genreChooser');
 
-     
+      // rewrite basic option "multiple" behavior , so we can click multiple option at once
+      window.onmousedown = function (e) {
+    	    var el = e.target;
+    	    if (el.tagName.toLowerCase() == 'option' && el.parentNode.hasAttribute('multiple')) {
+    	        e.preventDefault();
+    	       
+    	        // toggle selection
+    	        if(el.hasAttribute('selected')) { 
+    	        	el.removeAttribute('selected');
+    	        } 
+    	        else{
+    	        	el.setAttribute('selected', '');
+    	        }
+    	       
+
+    	        // hack to correct buggy behavior
+    	        var select = el.parentNode.cloneNode(true);
+    	        el.parentNode.parentNode.replaceChild(select, el.parentNode);
+    	    }
+    	}
+   
      var mySelect = document.createElement('select');
      mySelect.multiple = true;
      mySelect.name = "genre"
+     mySelect.classList.add("customScrollBar")
      var h2 = document.createElement('h2');
      h2.innerHTML = "Genres";
      genreDiv.appendChild(h2);
@@ -108,6 +129,7 @@
       mySelect = document.createElement('select');
       mySelect.multiple = true;
       mySelect.name = "artist";
+      mySelect.classList.add("customScrollBar")
       for (let i = 0; i < artists.length; i++) {
         var myOption = null;
         myOption = document.createElement('option');
@@ -248,9 +270,11 @@
 
       let genreArtistTrackList = document.querySelector('#genreArtistList');
       genreArtistTrackList.innerHTML = '';
+    
 
       let ol = document.createElement('ol');
       ol.id = 'artistSelect';
+      ol.classList.add("customScrollBar");
       tracks = shuffle(tracks);
       if (tracks.length>0){
     	  for (let track of tracks) {
