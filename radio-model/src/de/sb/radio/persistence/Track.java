@@ -123,6 +123,10 @@ public class Track extends BaseEntity {
 		this.owner = owner;
 	}
 
+	@JsonbProperty
+	public long getOwnerReference() {
+		return this.owner == null ? 0l : this.getIdentity();
+	}
 
 	@JsonbTransient
 	public Album getAlbum() {
@@ -132,7 +136,11 @@ public class Track extends BaseEntity {
 	public void setAlbum(Album album) {
 		this.album = album;
 	}
-
+	
+	@JsonbProperty
+	public long getAlbumReference() {
+		return this.album == null ? 0l : this.getIdentity();
+	}
 
 	@JsonbTransient
 	public Document getRecording() {
@@ -142,5 +150,9 @@ public class Track extends BaseEntity {
 	public void setRecording(Document recording) {
 		this.recording = recording;
 	}
-
+	
+	@JsonbProperty
+	public long getRecordingReference() {
+		return this.recording == null ? 0l : this.getIdentity();
+	}
 }

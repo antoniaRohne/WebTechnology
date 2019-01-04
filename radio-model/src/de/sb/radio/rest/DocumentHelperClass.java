@@ -45,6 +45,7 @@ public class DocumentHelperClass {
 		//if(person == null) throw new ClientErrorException(Status.NOT_FOUND);
 		final Album album = RADIO_MANAGER.find(Album.class,albumIdentity);
 		Track track = new Track(recording,person,album);
+		track.setGenre("genre");  // TODO: bearbeiten
 		
 		RADIO_MANAGER.persist(track);
 		RADIO_MANAGER.getTransaction().commit();

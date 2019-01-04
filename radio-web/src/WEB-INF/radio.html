@@ -35,30 +35,12 @@
 
     <template id="server-radio-template">
       <section class="genreFilter">
-        <!--
-          <fieldset>
-                      <legend>Pick your favourite genres</legend>
-                      <div id ="genreChooser">
-                      </div>
-                      <button type="button" class="buttonGenreSearch">Search</button>
-                  </fieldset>
-                  <div id ="genreList">
-                  </div>
-
-                   <fieldset>
-                      <legend>Pick your favourite artists</legend>
-          <div id ="artistChooser">
-                      </div>
-                      <button type="button" class="buttonArtistSearch">Search</button>
-                  </fieldset>
-                  <div id ="artistList">
-          </div>
-        -->
-
         <fieldset>
           <legend>Pick your favourite genres or artists</legend>
-          <div id="genreChooser"></div>
-          <div id="artistChooser"></div>
+          <div class="container">
+	          <div id="genreChooser"></div>
+	          <div id="artistChooser"></div>
+          </div>
           <div class="offset_limit">
             <label for="offset_limit">Choose number of tracks(1-100):</label>
 
@@ -68,14 +50,40 @@
               name="offset_limit"
               min="1"
 			  max="100"
-			  value="2"
+			  value="5"
             />
           </div>
-          <button type="button" class="buttonGenreArtistSearch">Search</button>
+          <button type="button" class="buttonGenreArtistSearch">Play ▶️</button>
         </fieldset>
-        <div id="genreArtistList"></div>
+
+        <template id="playlist-radio-template">
+	        <section>
+	        <div id="genreArtistList"></div>
+
+	     <div class="slidecontainer">
+        	<input class="slider" id="volumeRange" type="range" min="0" max="2" value="1" step="0.02">
+        	<p>Volume: <span id="volumeValue"></span></p>
+        </div>
+
+        <div class="slidecontainer">
+        	<input class="slider" id="compressionRange" type="range" min="0" max="5" value="1">
+        	<p>Compression: <span id="compressionValue"></span></p>
+        </div>
+
+        <div class="LyricsField">
+          <h2 id="artistAndTrack">Lyrics: </h2>
+          <p id="lyricsText">Lyrics here...</p>
+        </div>
+
+
+         </section>
+        </template>
+
+
       </section>
     </template>
+
+
     <template id="peer-radio-template">
       <div id="chooseModus">
         <p>Do you want to stream a radio or listen to a peer radio?</p>
