@@ -62,9 +62,9 @@ public class EntityService {
 			+ "(:upperCreationTimestamp is null or p.creationTimestamp <= :upperCreationTimestamp) and "
 			+ "(:email is null or p.email = :email) and " 
 			+ "(:givenName is null or p.surname = :givenName) and "
-			+ "(:familyName is null or p.forename = :familyName) ";
-			/*+ "(:sending is null or p.sending = :sending) and"
-			+ "(:sendingTimestamp is null or p.sendingTimestamp >= :sendingTimestamp) ";*/
+			+ "(:familyName is null or p.forename = :familyName) and "
+			+ "(:webAdress is null or p.webAdress = :webAdress) and "
+			+ "(:lastTransmissionTimestamp is null or p.lastTransmissionTimestamp >= :lastTransmissionTimestamp) ";
 
 	static private final String ALBUM_FILTER_QUERY = "select a.identity from Album as a where "
 			+ "(:lowerCreationTimestamp is null or a.creationTimestamp >= :lowerCreationTimestamp) and "
@@ -245,9 +245,9 @@ public class EntityService {
 			@QueryParam("upperCreationTimestamp") final Long upperCreationTimestamp,
 			@QueryParam("email") final String email,
 			@QueryParam("forename") final String forename,
-			@QueryParam("surname") final String surname
-			//@QueryParam("sending") final boolean sending,
-			//@QueryParam("sendingTimestamp") final Long sendingTimestamp
+			@QueryParam("surname") final String surname,
+			@QueryParam("webAdress") final boolean webAdress,
+			@QueryParam("lastTransmissionTimestamp") final Long lastTransmissionTimestamp
 	) {
 		final EntityManager radioManager = RestJpaLifecycleProvider.entityManager("radio");
 
@@ -260,8 +260,8 @@ public class EntityService {
 				.setParameter("email", email)
 				.setParameter("givenName", forename)
 				.setParameter("familyName", surname)
-				//.setParameter("sending", sending)
-				//.setParameter("sendingTimestamp", sendingTimestamp)
+				.setParameter("webAdress", webAdress)
+				.setParameter("lastTransmissionTimestamp", lastTransmissionTimestamp)
 				.getResultList();
 		
 		
@@ -404,6 +404,8 @@ public class EntityService {
 		person.setGroup(template.getGroup());
 		person.setForename(template.getForename());
 		person.setSurname(template.getSurname());
+		person.setLastTransmissionTimestamp(template.getLastTransmissionTimestamp());
+		person.setWebAdress(template.getWebAdress());
 		if(password != null) person.setPasswordHash(HashTools.sha256HashCode(password));
 		
 		if(insert) {

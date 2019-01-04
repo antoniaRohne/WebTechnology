@@ -28,8 +28,13 @@
     configurable: false,
     writable: true,
     value: async function() {
+    	if(!Controller.sessionOwner){
+			const anchor = document.querySelector("header li:nth-of-type(1) > a");
+			anchor.dispatchEvent(new MouseEvent("click"));
+			return;
+		}
+		
       this.displayError();
-
       try {
         //var genres = JSON.parse(await this.xhr("/services/tracks/genres?offset=0&limit=100", "GET", {"Accept": "application/json"}, "", "text", "ines.bergmann@web.de", "ines"));
         var genres = await fetch('/services/tracks/genres?offset=0&limit=100', {
