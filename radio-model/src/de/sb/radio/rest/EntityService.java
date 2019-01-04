@@ -2,6 +2,7 @@ package de.sb.radio.rest;
 
 import static de.sb.radio.rest.BasicAuthenticationFilter.REQUESTER_IDENTITY;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -12,6 +13,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceException;
 import javax.persistence.RollbackException;
 import javax.persistence.TypedQuery;
+import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
@@ -38,6 +40,8 @@ import de.sb.radio.persistence.HashTools;
 import de.sb.radio.persistence.Person;
 import de.sb.radio.persistence.Person.Group;
 import de.sb.radio.persistence.Track;
+import de.sb.radio.processor.Compressor;
+import de.sb.radio.processor.Processor;
 import de.sb.toolbox.Copyright;
 import de.sb.toolbox.net.RestJpaLifecycleProvider;
 
@@ -110,7 +114,7 @@ public class EntityService {
 
 	/**
 	 * Returns the person matching the given identity or the person matching the
-	 * given header field â€œRequester-Identityâ€?
+	 * given header field â€œRequester-Identityï¿½?
 	 */
 	@GET
 	@Path("people/{id}")
@@ -132,6 +136,7 @@ public class EntityService {
 	 * ID â€“ NOT it's JSON-Representation! Use result class "Response" in
 	 * order to set both using the document's content and content-type.
 	 **/
+	/*
 	@GET
 	@Path("documents/{id}")
 	@Produces(MediaType.WILDCARD)
@@ -158,10 +163,43 @@ public class EntityService {
 		}
 
 		return Response.ok(content, contentType).build();
+	}*/
+	
+	@GET
+	@Path("documents/{id}")
+	@Produces(MediaType.WILDCARD)
+	public Response queryDocument(
+		@PathParam("id") @Positive final long documentIdentity,
+		@QueryParam("height") @Positive final Integer imageHeight,
+		@QueryParam("width") @Positive final Integer imageWidth,
+		@QueryParam("compressionRatio") @Positive final Double audioCompressionRatio
+	) throws IOException, UnsupportedAudioFileException {
+		final EntityManager radioManager = RestJpaLifecycleProvider.entityManager("radio");
+		
+		final Document document = radioManager.find(Document.class, documentIdentity);
+		if (document == null) throw new ClientErrorException(Status.NOT_FOUND);
+		
+		byte[] content = document.getContent();
+		String contentType = document.getContentType();
+		
+		if(contentType.startsWith("image/")) {
+			//checken height, width != 0
+			//=> content = image scaledImageContent von Document
+		} else if (contentType.startsWith("audio/")) {
+			if (audioCompressionRatio != null) {
+				final Processor processor = new Compressor(audioCompressionRatio);
+				content = Document.processedAudioContent(content, processor);
+				contentType = "audio/wav";
+			}			
+		}
+
+		return Response.ok(content, contentType).build();
 	}
+	
+	
 
 	/**
-	 * : Returns the album-content and album-type matching the given document ID –
+	 * : Returns the album-content and album-type matching the given document ID ï¿½
 	 * NOT it's JSON-Representation! Use result class "Response" in order to set
 	 * both using the album's content and content-type.
 	 **/
