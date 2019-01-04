@@ -63,12 +63,14 @@
 			this.peerConnection.setLocalDescription(offerDescription);
 
 			let timestamp = Date.now()*1000;
-	        const ressource = "http://141.45.209.218:8001/services/people";
-	        const body = JSON.stringify({"personIdentity": Controller.sessionOwner.identity,"lastTransmissionTimestamp": timestamp, "webAdress": offerDescription});
-	        console.log(ressource);
+			Controller.sessionOwner.lastTransmissionTimestamp = timestamp;
+			Controller.sessionOwner.webAdress = JSON.stringify(offerDescription);
+	        const body = JSON.stringify(Controller.sessionOwner);
 
-	        let reponse = await fetch(ressource, {method: "POST", credentials: "include", body: body, headers: { 'Content-type': 'application/json' }});
+	        let response = await fetch("/services/people", {method: "POST", credentials: "include", body: body, headers: { 'Content-type': 'application/json' }});
 			if(!response.ok) throw new Error(response.status + " " + response.statusText);
+			
+			console.log(Controller.sessionOwner);
 				
 			console.log("Finish fetch post person");
 		}

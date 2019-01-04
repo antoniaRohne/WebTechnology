@@ -154,27 +154,6 @@
 
 		}
 	});
-	Object.defineProperty(ServerRadioController.prototype, 'getCoverBytes', {
-		enumerable: false,
-		configurable: false,
-		value: async function(identity) {
-			try {
-				let response = await fetch('/services/documents/' + identity, {
-					method: 'GET', // *GET, POST, PUT, DELETE, etc.
-					credentials: 'include', // include, *same-origin, omit
-					headers: { Accept: 'image/*' }
-				});
-				if (!response.ok)
-					throw new Error(response.status + ' ' + response.statusText);
-
-				return buffer = await response.arrayBuffer();
-
-			} catch (error) {
-				this.displayError(error);
-			}
-			return false;
-		}
-	});
 
 	Object.defineProperty(ServerRadioController.prototype, 'playAudio', {
 		enumerable: false,
@@ -231,124 +210,141 @@
 		configurable: false,
 		value: async function() {
 			this.displayError();
-			var tracks = [];
 			try {
 				//	Get array of all picked artists
 
 				var first_options = document.querySelectorAll("#artistChooser select option:checked");
 
-				var searchedArtists = '';
+				var selectedArtists = '';
 				if(first_options.length>0){
 					for (var i = 0; i < first_options.length; i++) {
 
-						searchedArtists += 'artist=' + first_options[i].value + '&';
+						selectedArtists += 'artist=' + first_options[i].value + '&';
 					}
 				}
-				searchedArtists = searchedArtists.slice(0, -1);
+				selectedArtists = selectedArtists.slice(0, -1);
 
-				console.log("searhedArtists: ", searchedArtists);
+				console.log("searhedArtists: ", selectedArtists);
 				//	Get array of all picked genres
 
 				var second_options = document.querySelectorAll("#genreChooser select option:checked");
-				var searchedGenres = '';
+				var selectedGenres = '';
 				if(second_options.length>0){
 					for (var i = 0; i < second_options.length; i++) {
-						searchedGenres += 'genre=' + second_options[i].value + '&';
+						selectedGenres += 'genre=' + second_options[i].value + '&';
 					}
 				}
-				searchedGenres = searchedGenres.slice(0, -1);
+				selectedGenres = selectedGenres.slice(0, -1);
 
-				console.log("searchedGenres: ", searchedGenres);
+				console.log("selectedGenres: ", selectedGenres);
 
 				var limit = document.querySelector('#offset_limit').value;
 				console.log('limit is now:', limit + ' songs');
 				//FETCH!
-				var response = await fetch(
-						'/services/tracks?' +
-						searchedArtists +
-						'&' +
-						searchedGenres +
-						'&limit=' +
-						limit,
+				
+				let uri = '/services/tracks?';
+				for(let artist of selectedArtists){
+					uri += "artist=" + artist + "&";
+				}
+				for(let genre of selectedGenres){
+					uri += "genre=" + genre + "&";
+				}
+				uri += "limit=" + limit;
+				
+				let response = await fetch(
+						uri,
 						{
 							method: 'GET', // *GET, POST, PUT, DELETE, etc.
-							mode: 'cors', // no-cors, cors, *same-origin
-							cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
 							credentials: 'include', // include, *same-origin, omit
-							headers: {
-								Accept: 'application/json',
-								'Content-type': 'application/x-www-form-urlencoded; charset=UTF-8'
-							}
-						//body: JSON.stringify(data), // body data type must match "Content-Type" header
+							headers: {Accept: 'application/json'}
 						}
 				);
 				if (!response.ok)
 					throw new Error(response.status + ' ' + response.statusText);
 
-				tracks = await response.json();
-
+				let tracks = await response.json();
 				console.log(tracks);
-			} catch (error) {
-				this.displayError(error);
-			}
-
-			let genreArtistTrackList = document.querySelector('#genreArtistList');
-			genreArtistTrackList.innerHTML = '';
-
-
-
-			var artistAndTrack = document.getElementById("artistAndTrack");
-			var lyricsText = document.getElementById("lyricsText");
-			let ol = document.createElement('ol');
-			ol.id = 'artistSelect';
-			ol.classList.add("customScrollBar");
-			tracks = shuffle(tracks);
-			if (tracks.length>0){
-				for (let track of tracks) {
-					var li = document.createElement('li');   
-					li.innerText = track.artist + " - "+ track.name;
-					var img = document.createElement('img');
-					if (getCoverBytes(track.albumReference)){
-						img.src = "https://cdn-images-1.medium.com/max/400/1*Aq9_o0ZTWxDBdl7B0u9tBQ.png"
-					}else{
-						img.src = "data:image/jpeg;base64," + getCoverBytes(track.coverReference);
-					}
-					li.appendChild(img);
-					ol.appendChild(li);
+				
+				let albums = [];
+		
+				for(let track of tracks){
+					let promise = fetch(
+							"/services/albums/" + track.albumReference,
+							{
+								method: 'GET', // *GET, POST, PUT, DELETE, etc.
+								credentials: 'include', // include, *same-origin, omit
+								headers: {Accept: 'application/json'}
+							}
+					);
+					albums.push(promise);
 				}
+				
+				for(let index = 0; index < albums.length; index++){
+					let albumResponse = await albums[index];
+					if (!albumResponse.ok) throw new Error(albumResponse.status + ' ' + albumResponse.statusText);
 
-				ol.firstChild.classList.add("played")
-				//this.playAudio(tracks[0].recordingReference);
-				// Please change this id to one which you have.
-				// this.playAudio(23);
+					let album = await albumResponse.json();
+					albums[index] = album;
+				}	
 
-
-			}else{
-				var li = document.createElement('i');
-
-				li.innerText = "No Tracks";
-				ol.appendChild(li);
-
-				artistAndTrack.innerHTML = "Lyrics :";
-				lyricsText.innerHTML = "no lyrics";
-			}
-			genreArtistTrackList.appendChild(ol);
-
-
-			//lyrics for the first song in the list
-			let artist = tracks[0].artist;
-			let trackName = tracks[0].name;
-
-			try {
-				const lyrics = await this.queryLyrics(artist, trackName);
-				console.log(lyrics);
-				artistAndTrack.innerHTML = "Lyrics for " + artist + ", " + trackName;
-				lyricsText.innerHTML = lyrics.result.track.text;
+				let genreArtistTrackList = document.querySelector('#genreArtistList');
+				genreArtistTrackList.innerHTML = '';
+	
+				var artistAndTrack = document.getElementById("artistAndTrack");
+				var lyricsText = document.getElementById("lyricsText");
+				let ol = document.createElement('ol');
+				ol.id = 'artistSelect';
+				ol.classList.add("customScrollBar");
+				tracks = shuffle(tracks);
+				if (tracks.length>0){
+					for (let index=0; index<tracks.length; index++) {
+						let track = tracks[index];
+						let album = albums[index];
+						
+						let li = document.createElement('li');   
+						li.innerHTML = track.artist + " - "+ track.name; //TODO textnode erzeugen
+						let img = document.createElement('img');
+						img.src = "/services/documents/" + album.coverReference;
+				
+						li.appendChild(img);
+						ol.appendChild(li);
+					}
+	
+					ol.firstChild.classList.add("played")
+					//this.playAudio(tracks[0].recordingReference);
+					// Please change this id to one which you have.
+					// this.playAudio(23);
+	
+	
+				}else{
+					var li = document.createElement('i');
+	
+					li.innerText = "No Tracks";
+					ol.appendChild(li);
+	
+					artistAndTrack.innerHTML = "Lyrics :";
+					lyricsText.innerHTML = "no lyrics";
+				}
+				genreArtistTrackList.appendChild(ol);
+	
+	
+				//lyrics for the first song in the list
+				let artist = tracks[0].artist;
+				let trackName = tracks[0].name;
+	
+				try {
+					const lyrics = await this.queryLyrics(artist, trackName);
+					console.log(lyrics);
+					artistAndTrack.innerHTML = "Lyrics for " + artist + ", " + trackName;
+					lyricsText.innerHTML = lyrics.result.track.text;
+				} catch (error) {
+					this.displayError(error);
+					lyricsText.innerHTML = "no such song found in database";
+				}
+			
 			} catch (error) {
 				this.displayError(error);
-				lyricsText.innerHTML = "no such song found in database";
 			}
-
 		}
 	});
 

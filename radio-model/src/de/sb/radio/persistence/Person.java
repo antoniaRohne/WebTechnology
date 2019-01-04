@@ -224,6 +224,16 @@ public class Person extends BaseEntity {
 	}
 	
 	@JsonbTransient
+	public Set<Track> getTracks(){
+		return this.tracks;
+	}
+	
+	@JsonbProperty
+	public long[] getTrackReferences() {
+		return this.tracks.stream().mapToLong(track -> track.getIdentity()).sorted().toArray();
+	}
+	
+	@JsonbProperty
 	public String getWebAdress () {
 		return webAdress;
 	}
@@ -232,7 +242,7 @@ public class Person extends BaseEntity {
 		webAdress = sdp;
 	}
 	
-	@JsonbTransient
+	@JsonbProperty
 	public Long getLastTransmissionTimestamp () {
 		return lastTransmissionTimestamp;
 	}

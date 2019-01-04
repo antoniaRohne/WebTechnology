@@ -125,7 +125,7 @@ public class Track extends BaseEntity {
 
 	@JsonbProperty
 	public long getOwnerReference() {
-		return this.owner == null ? 0l : this.getIdentity();
+		return this.owner == null ? 0l : this.owner.getIdentity();
 	}
 
 	@JsonbTransient
@@ -139,7 +139,7 @@ public class Track extends BaseEntity {
 	
 	@JsonbProperty
 	public long getAlbumReference() {
-		return this.album == null ? 0l : this.getIdentity();
+		return this.album == null ? 0l : this.album.getIdentity();
 	}
 
 	@JsonbTransient
@@ -153,6 +153,6 @@ public class Track extends BaseEntity {
 	
 	@JsonbProperty
 	public long getRecordingReference() {
-		return this.recording == null ? 0l : this.getIdentity();
+		return this.recording == null ? 0l : this.recording.getIdentity();
 	}
 }

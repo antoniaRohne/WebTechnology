@@ -414,14 +414,14 @@ public class EntityService {
 			@HeaderParam(REQUESTER_IDENTITY) @Positive final long requesterIdentity,
 			@QueryParam("avatarReference") final Long avatarReference,
 			@HeaderParam("Set-Password") final String password,
-			@NotNull @Valid Person template
+			@NotNull @Valid Person personTemplate
 	) {
 		final EntityManager radioManager = RestJpaLifecycleProvider.entityManager("radio");
 		final Person requester = radioManager.find(Person.class, requesterIdentity);		
-		if (requester == null || requester.getGroup() != Group.ADMIN)
+		if (requester == null || (requester.getIdentity() != personTemplate.getIdentity() && requester.getGroup() != Group.ADMIN))
 			throw new ClientErrorException(Status.FORBIDDEN);
 		
-		final boolean insert = template.getIdentity() == 0; 
+		final boolean insert = personTemplate.getIdentity() == 0; 
 		final Person person;  
 
 		if(insert) {
@@ -429,7 +429,7 @@ public class EntityService {
 			if(avatar == null) throw new ClientErrorException(Status.NOT_FOUND);
 			person = new Person(avatar);
 		} else {
-			person = radioManager.find(Person.class,template.getIdentity());
+			person = radioManager.find(Person.class,personTemplate.getIdentity());
 			if(person == null) throw new ClientErrorException(Status.NOT_FOUND);
 			if(avatarReference != null) {
 				final Document avatar = radioManager.find(Document.class, avatarReference);
@@ -438,12 +438,12 @@ public class EntityService {
 			}
 		}
 
-		person.setEmail(template.getEmail());
-		person.setGroup(template.getGroup());
-		person.setForename(template.getForename());
-		person.setSurname(template.getSurname());
-		person.setLastTransmissionTimestamp(template.getLastTransmissionTimestamp());
-		person.setWebAdress(template.getWebAdress());
+		person.setEmail(personTemplate.getEmail());
+		person.setGroup(personTemplate.getGroup());
+		person.setForename(personTemplate.getForename());
+		person.setSurname(personTemplate.getSurname());
+		person.setLastTransmissionTimestamp(personTemplate.getLastTransmissionTimestamp());
+		person.setWebAdress(personTemplate.getWebAdress());
 		if(password != null) person.setPasswordHash(HashTools.sha256HashCode(password));
 		
 		if(insert) {
