@@ -155,4 +155,9 @@ public class Track extends BaseEntity {
 	public long getRecordingReference() {
 		return this.recording == null ? 0l : this.recording.getIdentity();
 	}
+	
+	@JsonbProperty
+	public long getAlbumCoverReference() {
+		return this.album == null ? 0L : this.album.getCoverReference();
+	}
 }

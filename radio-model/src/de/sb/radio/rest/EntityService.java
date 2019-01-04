@@ -170,9 +170,9 @@ public class EntityService {
 	@Produces(MediaType.WILDCARD)
 	public Response queryDocument(
 		@PathParam("id") @Positive final long documentIdentity,
-		@QueryParam("height") @Positive final Integer imageHeight,
-		@QueryParam("width") @Positive final Integer imageWidth,
-		@QueryParam("compressionRatio") @Positive final Double audioCompressionRatio
+		@QueryParam("imgHeight") @Positive final Integer imageHeight,
+		@QueryParam("imgWidth") @Positive final Integer imageWidth,
+		@QueryParam("audioCompressionRatio") @Positive final Double audioCompressionRatio
 	) throws IOException, UnsupportedAudioFileException {
 		final EntityManager radioManager = RestJpaLifecycleProvider.entityManager("radio");
 		

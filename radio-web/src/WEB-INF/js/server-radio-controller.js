@@ -141,17 +141,15 @@
 			}
 			artistDiv.appendChild(mySelect);
 
-
-
-			var compressionSlider = document.getElementById("compressionRange");
-			var compressionValue = document.getElementById("compressionValue");
-			compressionValue.innerHTML = compressionSlider.value;
-
-			compressionSlider.oninput = function() {
-				compressionValue.innerHTML = this.value;
+			var compressionSlider = document.getElementById("compressionExponentRange");
+			var compressionRatioOutput = document.getElementById("compressionRatio");
+			compressionRatioOutput.value = "1.0";
+			console.log(compressionRatioOutput.value);
+			
+			compressionSlider.oninput = event => { 
+				compressionRatioOutput.value = Math.pow(2,compressionSlider.value); 
+				console.log(compressionRatioOutput.value);
 			}
-
-
 		}
 	});
 
@@ -160,7 +158,11 @@
 		configurable: false,
 		value: async function(identity) {
 			try {
-				let response = await fetch('/services/documents/' + identity, {
+				let compressionRatio = document.getElementById("compressionRatio").value;
+				let uri = '/services/documents/' + identity;
+				if(compressionRatio != 1.0) uri+= "?audioCompressionRatio=" + compressionRatio;
+				
+				let response = await fetch(uri, {
 					method: 'GET', // *GET, POST, PUT, DELETE, etc.
 					credentials: 'include', // include, *same-origin, omit
 					headers: { Accept: 'audio/*' }
@@ -192,9 +194,6 @@
 					source.buffer = decodedData;
 					source.start(0);
 				});
-
-				//var lyricsText = document.getElementById("lyricsText");
-
 
 			} catch (error) {
 				this.displayError(error);
@@ -264,28 +263,7 @@
 
 				let tracks = await response.json();
 				console.log(tracks);
-				
-				let albums = [];
-		
-				for(let track of tracks){
-					let promise = fetch(
-							"/services/albums/" + track.albumReference,
-							{
-								method: 'GET', // *GET, POST, PUT, DELETE, etc.
-								credentials: 'include', // include, *same-origin, omit
-								headers: {Accept: 'application/json'}
-							}
-					);
-					albums.push(promise);
-				}
-				
-				for(let index = 0; index < albums.length; index++){
-					let albumResponse = await albums[index];
-					if (!albumResponse.ok) throw new Error(albumResponse.status + ' ' + albumResponse.statusText);
 
-					let album = await albumResponse.json();
-					albums[index] = album;
-				}	
 
 				let genreArtistTrackList = document.querySelector('#genreArtistList');
 				genreArtistTrackList.innerHTML = '';
@@ -297,14 +275,12 @@
 				ol.classList.add("customScrollBar");
 				tracks = shuffle(tracks);
 				if (tracks.length>0){
-					for (let index=0; index<tracks.length; index++) {
-						let track = tracks[index];
-						let album = albums[index];
-						
+					for (let track of tracks) {		
 						let li = document.createElement('li');   
 						li.innerHTML = track.artist + " - "+ track.name; //TODO textnode erzeugen
 						let img = document.createElement('img');
-						img.src = "/services/documents/" + album.coverReference;
+						img.src = "/services/documents/" + track.albumCoverReference;
+						img.classList.add("albumCover");
 				
 						li.appendChild(img);
 						ol.appendChild(li);
@@ -313,7 +289,7 @@
 					ol.firstChild.classList.add("played")
 					//this.playAudio(tracks[0].recordingReference);
 					// Please change this id to one which you have.
-					// this.playAudio(23);
+					this.playAudio(49);
 	
 	
 				}else{
@@ -323,7 +299,7 @@
 					ol.appendChild(li);
 	
 					artistAndTrack.innerHTML = "Lyrics :";
-					lyricsText.innerHTML = "no lyrics";
+					lyricsText.value = "no lyrics";
 				}
 				genreArtistTrackList.appendChild(ol);
 	
@@ -336,10 +312,10 @@
 					const lyrics = await this.queryLyrics(artist, trackName);
 					console.log(lyrics);
 					artistAndTrack.innerHTML = "Lyrics for " + artist + ", " + trackName;
-					lyricsText.innerHTML = lyrics.result.track.text;
+					lyricsText.value = lyrics.result.track.text;
 				} catch (error) {
 					this.displayError(error);
-					lyricsText.innerHTML = "no such song found in database";
+					lyricsText.value = "no such song found in database";
 				}
 			
 			} catch (error) {
