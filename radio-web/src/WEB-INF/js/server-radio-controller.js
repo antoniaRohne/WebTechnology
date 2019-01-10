@@ -186,6 +186,7 @@
 				volumeSlider.oninput = function() {
 					volumeValue.innerHTML = parseInt((this.value * 50),10);
 					gainNode.gain.value = this.value;
+					console.log(gainNode.gain.value);
 				}
 
 				audioContext.decodeAudioData(buffer, decodedData => {
@@ -289,7 +290,7 @@
 					ol.firstChild.classList.add("played")
 					//this.playAudio(tracks[0].recordingReference);
 					// Please change this id to one which you have.
-					this.playAudio(49);
+					this.playAudio(tracks[0].recordingReference);
 	
 	
 				}else{
