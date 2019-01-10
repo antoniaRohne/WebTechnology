@@ -243,14 +243,15 @@
 				//FETCH!
 				
 				let uri = '/services/tracks?';
-				for(let artist of selectedArtists){
-					uri += "artist=" + artist + "&";
-				}
-				for(let genre of selectedGenres){
-					uri += "genre=" + genre + "&";
-				}
-				uri += "limit=" + limit;
-				
+//				for(let artist of selectedArtists){
+//					uri += "artist=" + artist + "&";
+//				}
+//				for(let genre of selectedGenres){
+//					uri += "genre=" + genre + "&";
+//				}
+				uri+=selectedArtists +"&" +selectedGenres
+				uri += "&limit=" + limit;
+				console.log(uri);
 				let response = await fetch(
 						uri,
 						{
