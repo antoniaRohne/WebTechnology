@@ -24,17 +24,17 @@ public class DocumentHelperClass {
 	final static EntityManager RADIO_MANAGER = RADIO_FACTORY.createEntityManager();
 
 	static public void main(final String[] args) throws IOException {
-		Path recordingFilePath = Paths.get(args[0]);
-		//Path coverFilePath = Paths.get(args[1]);
+//		Path recordingFilePath = Paths.get(args[0]);
+		Path coverFilePath = Paths.get(args[1]);
 
-//		long coverReference = addDocument(coverFilePath, "image/jpeg");
-//		System.out.println(coverReference);
-		long recordingReference = addDocument(recordingFilePath, "music/mp3");
-		System.out.println(recordingReference);
+		long coverReference = addDocument(coverFilePath, "image/jpeg");
+		System.out.println(coverReference);
+//		long recordingReference = addDocument(recordingFilePath, "music/mp3");
+//		System.out.println(recordingReference);
 //		long albumIdentity = addAlbum(coverReference);
 //		System.out.println(albumIdentity);
-		long trackIdentity = addTrack(recordingReference, 65, 20); 
-		System.out.println(trackIdentity);
+		//long trackIdentity = addTrack(recordingReference, 65, 20); 
+//		System.out.println(trackIdentity);
 		
 	}
 

@@ -279,12 +279,14 @@
 				if (tracks.length>0){
 					for (let track of tracks) {		
 						let li = document.createElement('li');   
-						li.innerHTML = track.artist + " - "+ track.name; //TODO textnode erzeugen
 						let img = document.createElement('img');
 						img.src = "/services/documents/" + track.albumCoverReference;
 						img.classList.add("albumCover");
+						let span = document.createElement('span');   
+						span.innerHTML = track.artist + " - "+ track.name; //TODO textnode erzeugen
 				
 						li.appendChild(img);
+						li.appendChild(span);
 						ol.appendChild(li);
 					}
 	
