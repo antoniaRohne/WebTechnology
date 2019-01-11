@@ -8,18 +8,32 @@
 	// imports
 	const Controller = de_sb_radio.Controller;
 
-	let AUDIO_CONTEXT = window.AudioContext || window.webkitAudioContext;
-	let audioContext = new AUDIO_CONTEXT();
+	
+	
 
-	var source = null;
 	var myAudio = document.querySelector('audio');
-	var gainNode = null;
+
+	let tracks = null;
 
 	/**
 	 * Creates a new welcome controller that is derived from an abstract controller.
 	 */
 	const ServerRadioController = function() {
 		Controller.call(this);
+		
+		Object.defineProperty(this, 'leftAudioSource', {
+			enumerable: false,
+			configurable: false,
+			writable: true,
+			value: null
+		});
+		
+		Object.defineProperty(this, 'rightAudioSource', {
+			enumerable: false,
+			configurable: false,
+			writable: true,
+			value: null
+		});
 	};
 	ServerRadioController.prototype = Object.create(Controller.prototype);
 	ServerRadioController.prototype.constructor = ServerRadioController;
@@ -32,6 +46,8 @@
 		configurable: false,
 		writable: true,
 		value: async function() {
+			if(!Controller.audioContext) Controller.audioContext = new AudioContext();
+			
 			this.displayError();
 			var genres,artists = [];
 
@@ -145,7 +161,7 @@
 			var compressionRatioOutput = document.getElementById("compressionRatio");
 			compressionRatioOutput.value = "1.0";
 			console.log(compressionRatioOutput.value);
-			
+
 			compressionSlider.oninput = event => { 
 				compressionRatioOutput.value = Math.pow(2,compressionSlider.value); 
 				console.log(compressionRatioOutput.value);
@@ -156,12 +172,15 @@
 	Object.defineProperty(ServerRadioController.prototype, 'playAudio', {
 		enumerable: false,
 		configurable: false,
-		value: async function(identity) {
+		value: async function(index) {
+			let source = null;
+			let gainNode = null;
 			try {
+				let identity = this.tracks[index].recordingReference;
 				let compressionRatio = document.getElementById("compressionRatio").value;
 				let uri = '/services/documents/' + identity;
 				if(compressionRatio != 1.0) uri+= "?audioCompressionRatio=" + compressionRatio;
-				
+
 				let response = await fetch(uri, {
 					method: 'GET', // *GET, POST, PUT, DELETE, etc.
 					credentials: 'include', // include, *same-origin, omit
@@ -174,13 +193,16 @@
 
 				if(source != null)
 					source.stop(0);
-				source = audioContext.createBufferSource();
-				gainNode = audioContext.createGain();
+				source = Controller.audioContext.createBufferSource();
+				gainNode = Controller.audioContext.createGain();
 				source.connect(gainNode);
-				gainNode.connect(audioContext.destination);
+				gainNode.connect(Controller.audioContext.destination);
+				console.log(Controller.audioContext.currentTime);
+				
 
-				var volumeSlider = document.getElementById("volumeRange");
-				var volumeValue = document.getElementById("volumeValue");
+
+				let volumeSlider = document.getElementById("volumeRange");
+				let volumeValue = document.getElementById("volumeValue");
 				volumeValue.innerHTML = volumeSlider.value;
 
 				volumeSlider.oninput = function() {
@@ -188,19 +210,33 @@
 					gainNode.gain.value = this.value;
 					console.log(gainNode.gain.value);
 				}
-
-				audioContext.decodeAudioData(buffer, decodedData => {
+				let songDuration = 15;
+				Controller.audioContext.decodeAudioData(buffer, decodedData => {
 					//Alternative await decodeAudioData
 					source.loop = false;
 					source.buffer = decodedData;
+					songDuration = source.buffer.duration;
 					source.start(0);
 				});
+//				console.log("songDuration: " + songDuration);
+
+				gainNode.gain.setValueAtTime(0 , 0.0)								//FADE IN
+				gainNode.gain.linearRampToValueAtTime(volumeSlider.value ,  5.0);	//FADE IN
+				gainNode.gain.linearRampToValueAtTime(0.0, songDuration - 5.0);		//FADE OUT
+				var breakPoint = (songDuration - 10.0) * 1000;
+				console.log(songDuration);
+				index+=1;
+				
+				//setTimeout(() => this.playAudio(index), breakPoint);
+
 
 			} catch (error) {
 				this.displayError(error);
 			}
+			
 		}
 	});
+
 
 	/**
 	 *
@@ -241,13 +277,13 @@
 				var limit = document.querySelector('#offset_limit').value;
 				console.log('limit is now:', limit + ' songs');
 				//FETCH!
-				
+
 				let uri = '/services/tracks?';
 //				for(let artist of selectedArtists){
-//					uri += "artist=" + artist + "&";
+//				uri += "artist=" + artist + "&";
 //				}
 //				for(let genre of selectedGenres){
-//					uri += "genre=" + genre + "&";
+//				uri += "genre=" + genre + "&";
 //				}
 				uri+=selectedArtists +"&" +selectedGenres
 				uri += "&limit=" + limit;
@@ -263,65 +299,67 @@
 				if (!response.ok)
 					throw new Error(response.status + ' ' + response.statusText);
 
-				let tracks = await response.json();
-				console.log(tracks);
+				this.tracks = await response.json();
+				console.log(this.tracks);
 
 
 				let genreArtistTrackList = document.querySelector('#genreArtistList');
 				genreArtistTrackList.innerHTML = '';
-	
+
 				var artistAndTrack = document.getElementById("artistAndTrack");
 				var lyricsText = document.getElementById("lyricsText");
 				let ol = document.createElement('ol');
 				ol.id = 'artistSelect';
 				ol.classList.add("customScrollBar");
-				tracks = shuffle(tracks);
-				if (tracks.length>0){
-					for (let track of tracks) {		
+				this.tracks = shuffle(this.tracks);
+				if (this.tracks.length>0){
+					for (let track of this.tracks) {		
 						let li = document.createElement('li');   
 						let img = document.createElement('img');
 						img.src = "/services/documents/" + track.albumCoverReference;
 						img.classList.add("albumCover");
 						let span = document.createElement('span');   
 						span.innerHTML = track.artist + " - "+ track.name; //TODO textnode erzeugen
-				
+
 						li.appendChild(img);
 						li.appendChild(span);
 						ol.appendChild(li);
 					}
-	
+
 					ol.firstChild.classList.add("played")
 					//this.playAudio(tracks[0].recordingReference);
 					// Please change this id to one which you have.
-					this.playAudio(tracks[0].recordingReference);
-	
-	
+					console.table(this.tracks);
+//					this.playAudio(this.tracks[0].recordingReference);
+					this.playAudio(0);
+
+
 				}else{
 					var li = document.createElement('i');
-	
+
 					li.innerText = "No Tracks";
 					ol.appendChild(li);
-	
+
 					artistAndTrack.innerHTML = "Lyrics :";
 					lyricsText.value = "no lyrics";
 				}
 				genreArtistTrackList.appendChild(ol);
-	
-	
+
+
 				//lyrics for the first song in the list
-				let artist = tracks[0].artist;
-				let trackName = tracks[0].name;
-	
-				try {
-					const lyrics = await this.queryLyrics(artist, trackName);
-					console.log(lyrics);
-					artistAndTrack.innerHTML = "Lyrics for " + artist + ", " + trackName;
-					lyricsText.value = lyrics.result.track.text;
-				} catch (error) {
-					this.displayError(error);
-					lyricsText.value = "no such song found in database";
-				}
-			
+				let artist = this.tracks[0].artist;
+				let trackName = this.tracks[0].name;
+
+//				try {
+//				const lyrics = await this.queryLyrics(artist, trackName);
+//				console.log(lyrics);
+//				artistAndTrack.innerHTML = "Lyrics for " + artist + ", " + trackName;
+//				lyricsText.value = lyrics.result.track.text;
+//				} catch (error) {
+//				this.displayError(error);
+//				lyricsText.value = "no such song found in database";
+//				}
+
 			} catch (error) {
 				this.displayError(error);
 			}
