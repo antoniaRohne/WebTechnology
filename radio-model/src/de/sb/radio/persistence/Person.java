@@ -9,8 +9,11 @@ import java.util.Set;
 import javax.json.bind.annotation.JsonbProperty;
 import javax.json.bind.annotation.JsonbTransient;
 import javax.json.bind.annotation.JsonbVisibility;
+import javax.persistence.AttributeOverride;
+import javax.persistence.AttributeOverrides;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
+import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.Enumerated;
 import javax.persistence.JoinColumn;
@@ -62,9 +65,11 @@ public class Person extends BaseEntity {
 	@Column(nullable = false, updatable = true)
 	private String surname;
 	
-	/*Default false ?
-	@Column(nullable = false, updatable = true)
-	private boolean sending;*/
+	@Column(nullable = true, updatable = true)
+	private String webAdress;
+	
+	@Column(nullable = true, updatable = true)
+	private Long lastTransmissionTimestamp;
 	
 	@NotNull
 	@OneToMany(mappedBy="owner", cascade = {CascadeType.REMOVE, CascadeType.REFRESH, CascadeType.MERGE, CascadeType.DETACH})
@@ -216,5 +221,33 @@ public class Person extends BaseEntity {
 	 */
 	public void setAvatar (final Document avatar) {
 		this.avatar = avatar;
+	}
+	
+	@JsonbTransient
+	public Set<Track> getTracks(){
+		return this.tracks;
+	}
+	
+	@JsonbProperty
+	public long[] getTrackReferences() {
+		return this.tracks.stream().mapToLong(track -> track.getIdentity()).sorted().toArray();
+	}
+	
+	@JsonbProperty
+	public String getWebAdress () {
+		return webAdress;
+	}
+
+	public void setWebAdress (String sdp) {
+		webAdress = sdp;
+	}
+	
+	@JsonbProperty
+	public Long getLastTransmissionTimestamp () {
+		return lastTransmissionTimestamp;
+	}
+
+	public void setLastTransmissionTimestamp (Long timestamp) {
+		lastTransmissionTimestamp = timestamp;
 	}
 }

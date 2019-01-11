@@ -33,11 +33,18 @@
 		configurable: false,
 		writable: true,
 		value: async function () {
+			if(!Controller.sessionOwner){
+				const anchor = document.querySelector("header li:nth-of-type(1) > a");
+				anchor.dispatchEvent(new MouseEvent("click"));
+				return;
+			}
+			
 			mainElement.appendChild(document.querySelector("#peer-radio-template").content.cloneNode(true).firstElementChild);
 			mainElement.querySelector("#sendButton").addEventListener("click", event => this.sendModus());
 			mainElement.querySelector("#receiveButton").addEventListener("click", event => this.listen());
 		}
 	});
+	/*
 	
 	Object.defineProperty(PeerRadioController.prototype, "sendModus", {
 		enumerable: false,
@@ -63,16 +70,13 @@
 		value: async function () {
 			mainElement.querySelector("#chooseModus").remove();
 			
-			let sendingPersons = await fetch("/services/people?sending=1", {
+			let sendingPersons = await fetch("/services/people", {
 		        method: "GET", // *GET, POST, PUT, DELETE, etc.
-		        mode: "cors", // no-cors, cors, *same-origin
-		        cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
 		        credentials: "include", // include, *same-origin, omit
 		        headers: {
 		              'Accept': 'application/json',
 				'Content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
 		        }
-		        //body: JSON.stringify(data), // body data type must match "Content-Type" header
 		    }).then(res => res.json()).catch(function (error) {
 		        console.log(error);
 		       });
@@ -80,7 +84,8 @@
 			let personList = document.createElement('ul');
 			
 			for(let person of sendingPersons){
-				let personEntry = document.createElement('li');
+				//if(Date.now()-person.lastTransmissionTimestamp<???){
+				let personEntry = document.createElement('li'); //=> to buttons so the user can click on ?
 				personEntry.innerHTML = person.surname;
 				personEntry.addEventListener("click", event => this.startListen());
 				personList.appendChild(personEntry);
@@ -93,10 +98,8 @@
 	Object.defineProperty(PeerRadioController.prototype, "startTracks", {
 		enumerable: false,
 		configurable: false,
-		writable: true,
 		value: async function () {
-			
-			files = mainElement.querySelector("#fileChooser").files;
+			this.files = mainElement.querySelector("#fileChooser").files;
 			let fileList = document.createElement('ul');
 			
 			for(let i=0; i<files.length;i++){
@@ -107,11 +110,9 @@
 			
 			mainElement.appendChild(fileList);
 			
-			localConnection = new RTCPeerConnection();
+			localConnection = new RTCPeerConnection(); //need something as parameter ?
 
 			sendChannel = localConnection.createDataChannel("sendChannel");
-			sendChannel.addEventListener('open', onSendChannelOpen);
-			sendChannel.addEventListener('close', onSendChannelClosed);
 			console.log('Created send data channel: ', sendChannel);
 			 
 			localConnection.addEventListener('icecandidate', e => onIceCandidate(localConnection, e));
@@ -129,20 +130,18 @@
 					//.addEventListener("ended", this.playNext);
 			        source.connect(context.destination);
 			        mainElement.querySelector("ul").childNodes[nextId].classList.add("played");
-			        
 			        var remote = context.createMediaStreamDestination();
-			 
 			        source.connect(remote);
 			 
 			        localConnection.addStream(remote.stream);
 			 
-			        localConnection.createOffer(handleLocalDescription);
+			        sendOffer();	        
 			    });
 			});
 			 
 			      reader.readAsArrayBuffer(files[nextId]);
 	
-			/*if(mainElement.querySelector("#player") == null){
+			if(mainElement.querySelector("#player") == null){
 			let audioPlayer = document.createElement("AUDIO");
 			audioPlayer.id = "player";
 			audioPlayer.setAttribute("src",URL.createObjectURL(files[nextId]));
@@ -150,10 +149,30 @@
 			audioPlayer.addEventListener("ended", this.playNext);
 			mainElement.appendChild(audioPlayer);
 			audioPlayer.play();
-			}*/
+			}
+		}
+	});*/
+
+
+	Object.defineProperty(PeerRadioController.prototype, "sendOffer", {
+		enumerable: false,
+		configurable: false,
+		value: async function () {
+			let offer = await this.localConnection.createOffer(description => localConnection.setLocalDescription(description));
+
+			let timestamp = Date.now()*1000;
+	        const ressource = "/services/people/" + Controller.sessionOwner.identity;
+	        const body = JSON.stringify({"lastTransmissionTimestamp": timestamp, "webAdress": description});
+	        console.log(ressource);
+
+	        let reponse = await fetch(ressource, { method: "POST", credentials: "include", body: body, headers: { 'Content-type': 'application/json' }});
+			if(!response.ok) throw new Error(response.status + " " + response.statusText);
+				
+			console.log("Finish fetch post person");
 		}
 	});
-	
+
+	/*
 	Object.defineProperty(PeerRadioController.prototype, "playNext", {
 		enumerable: false,
 		configurable: false,
@@ -174,89 +193,47 @@
 		configurable: false,
 		writable: true,
 		value: async function () {
-			remoteConnection = new RTCPeerConnection();
-			remoteConnection.addEventListener('icecandidate', e => onIceCandidate(remoteConnection, e));
-			remoteConnection.addEventListener('track', gotRemoteStream);
+			localConnection = new RTCPeerConnection();
+			localConnection.addEventListener('icecandidate', e => onIceCandidate(localConnection, e));
+			localConnection.addEventListener('track', gotRemoteStream);
+			
+			
 		}
 	});	
-	
-	function onSendChannelOpen() {
-		  console.log('Send channel is open');
-		  sendData();
-	}
 
-	function onSendChannelClosed() {
-		  console.log('Send channel is closed');
-		  localConnection.close();
-		  localConnection = null;
-		  console.log('Closed local peer connection');
-	}
-	
-	function receiveChannelCallback(event){
-		receiveChannel = event.channel;
-		receiveChannel.onmessage(handleReceiveMessage);
-		receiveChannel.onopen = handleReceiveChannelStatusChange;
-		receiveChannel.onclose = handleReceiveChannelStatusChange;
-	}
-	
 	async function onIceCandidate(pc, event) {
 		  const candidate = event.candidate;
 		  if (candidate === null) {
 		    return;
 		  } // Ignore null candidates
 		  try {
-		    await getOtherPc(pc).addIceCandidate(candidate);
+		    await localConnection.addIceCandidate(candidate);
 		    console.log('AddIceCandidate successful: ', candidate);
 		  } catch (e) {
 		    console.error('Failed to add Ice Candidate: ', e);
 		  }
 	}
 	
-	function getOtherPc(pc) {
-		  return (pc === localConnection) ? remoteConnection : localConnection;
-	}
-	
-	function receiveChannelCallback(event) {
-		  console.log('Receive Channel Callback');
-		  receiveChannel = event.channel;
-		  receiveChannel.binaryType = 'arraybuffer';
-		  receiveChannel.addEventListener('close', onReceiveChannelClosed);
-	}
-	
-	async function handleLocalDescription(desc) {
-		  localConnection.setLocalDescription(desc);
+	async function handleRemoteDescription(desc) {
+		  localConnection.setRemoteDescription(desc);
 		  console.log('Offer from localConnection:\n', desc.sdp);
-		  remoteConnection.setRemoteDescription(desc);
 		  try {
-		    const remoteAnswer = await remoteConnection.createAnswer();
-		    handleRemoteAnswer(remoteAnswer);
+		    await localConnection.createAnswer(handleLocalDescription);
 		  } catch (e) {
 		    console.error('Error when creating remote answer: ', e);
 		  }
 	}
 	
-	function handleRemoteAnswer(desc) {
-		  remoteConnection.setLocalDescription(desc);
-		  console.log('Answer from remoteConnection:\n', desc.sdp);
-		  localConnection.setRemoteDescription(desc);
-	}
-	
-	function onReceiveChannelClosed() {
-		  console.log('Receive channel is closed');
-		  remoteConnection.close();
-		  remoteConnection = null;
-		  console.log('Closed remote peer connection');  
+	async function handleLocalDescription(desc) {
+		  localConnection.setLocalDescription(desc);
 	}
 	
 	function gotRemoteStream(event) {
-		  // create a player, we could also get a reference from a existing player in the DOM
 		  var player = new Audio();
-		  // attach the media stream
 		  attachMediaStream(player, event.stream);
-		  // start playing
 		  player.play();
 		}
-	
+	*/
 	/**
 	 * Perform controller callback registration during DOM load event handling.
 	 */

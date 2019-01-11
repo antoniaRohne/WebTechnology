@@ -2,6 +2,7 @@ package de.sb.radio.rest;
 
 import static de.sb.radio.rest.BasicAuthenticationFilter.REQUESTER_IDENTITY;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -12,6 +13,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceException;
 import javax.persistence.RollbackException;
 import javax.persistence.TypedQuery;
+import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
@@ -38,6 +40,8 @@ import de.sb.radio.persistence.HashTools;
 import de.sb.radio.persistence.Person;
 import de.sb.radio.persistence.Person.Group;
 import de.sb.radio.persistence.Track;
+import de.sb.radio.processor.Compressor;
+import de.sb.radio.processor.Processor;
 import de.sb.toolbox.Copyright;
 import de.sb.toolbox.net.RestJpaLifecycleProvider;
 
@@ -62,9 +66,9 @@ public class EntityService {
 			+ "(:upperCreationTimestamp is null or p.creationTimestamp <= :upperCreationTimestamp) and "
 			+ "(:email is null or p.email = :email) and " 
 			+ "(:givenName is null or p.surname = :givenName) and "
-			+ "(:familyName is null or p.forename = :familyName) ";
-			/*+ "(:sending is null or p.sending = :sending) and"
-			+ "(:sendingTimestamp is null or p.sendingTimestamp >= :sendingTimestamp) ";*/
+			+ "(:familyName is null or p.forename = :familyName) and "
+			+ "(:webAdress is null or p.webAdress = :webAdress) and "
+			+ "(:lastTransmissionTimestamp is null or p.lastTransmissionTimestamp >= :lastTransmissionTimestamp) ";
 
 	static private final String ALBUM_FILTER_QUERY = "select a.identity from Album as a where "
 			+ "(:lowerCreationTimestamp is null or a.creationTimestamp >= :lowerCreationTimestamp) and "
@@ -110,7 +114,7 @@ public class EntityService {
 
 	/**
 	 * Returns the person matching the given identity or the person matching the
-	 * given header field â€œRequester-Identityâ€?
+	 * given header field â€œRequester-Identityï¿½?
 	 */
 	@GET
 	@Path("people/{id}")
@@ -132,6 +136,7 @@ public class EntityService {
 	 * ID â€“ NOT it's JSON-Representation! Use result class "Response" in
 	 * order to set both using the document's content and content-type.
 	 **/
+	/*
 	@GET
 	@Path("documents/{id}")
 	@Produces(MediaType.WILDCARD)
@@ -158,10 +163,43 @@ public class EntityService {
 		}
 
 		return Response.ok(content, contentType).build();
+	}*/
+	
+	@GET
+	@Path("documents/{id}")
+	@Produces(MediaType.WILDCARD)
+	public Response queryDocument(
+		@PathParam("id") @Positive final long documentIdentity,
+		@QueryParam("imgHeight") @Positive final Integer imageHeight,
+		@QueryParam("imgWidth") @Positive final Integer imageWidth,
+		@QueryParam("audioCompressionRatio") @Positive final Double audioCompressionRatio
+	) throws IOException, UnsupportedAudioFileException {
+		final EntityManager radioManager = RestJpaLifecycleProvider.entityManager("radio");
+		
+		final Document document = radioManager.find(Document.class, documentIdentity);
+		if (document == null) throw new ClientErrorException(Status.NOT_FOUND);
+		
+		byte[] content = document.getContent();
+		String contentType = document.getContentType();
+		
+		if(contentType.startsWith("image/")) {
+			//checken height, width != 0
+			//=> content = image scaledImageContent von Document
+		} else if (contentType.startsWith("audio/")) {
+			if (audioCompressionRatio != null) {
+				final Processor processor = new Compressor(audioCompressionRatio);
+				content = Document.processedAudioContent(content, processor);
+				contentType = "audio/wav";
+			}			
+		}
+
+		return Response.ok(content, contentType).build();
 	}
+	
+	
 
 	/**
-	 * : Returns the album-content and album-type matching the given document ID –
+	 * : Returns the album-content and album-type matching the given document ID ï¿½
 	 * NOT it's JSON-Representation! Use result class "Response" in order to set
 	 * both using the album's content and content-type.
 	 **/
@@ -245,9 +283,9 @@ public class EntityService {
 			@QueryParam("upperCreationTimestamp") final Long upperCreationTimestamp,
 			@QueryParam("email") final String email,
 			@QueryParam("forename") final String forename,
-			@QueryParam("surname") final String surname
-			//@QueryParam("sending") final boolean sending,
-			//@QueryParam("sendingTimestamp") final Long sendingTimestamp
+			@QueryParam("surname") final String surname,
+			@QueryParam("webAdress") final boolean webAdress,
+			@QueryParam("lastTransmissionTimestamp") final Long lastTransmissionTimestamp
 	) {
 		final EntityManager radioManager = RestJpaLifecycleProvider.entityManager("radio");
 
@@ -260,8 +298,8 @@ public class EntityService {
 				.setParameter("email", email)
 				.setParameter("givenName", forename)
 				.setParameter("familyName", surname)
-				//.setParameter("sending", sending)
-				//.setParameter("sendingTimestamp", sendingTimestamp)
+				.setParameter("webAdress", webAdress)
+				.setParameter("lastTransmissionTimestamp", lastTransmissionTimestamp)
 				.getResultList();
 		
 		
@@ -376,14 +414,14 @@ public class EntityService {
 			@HeaderParam(REQUESTER_IDENTITY) @Positive final long requesterIdentity,
 			@QueryParam("avatarReference") final Long avatarReference,
 			@HeaderParam("Set-Password") final String password,
-			@NotNull @Valid Person template
+			@NotNull @Valid Person personTemplate
 	) {
 		final EntityManager radioManager = RestJpaLifecycleProvider.entityManager("radio");
 		final Person requester = radioManager.find(Person.class, requesterIdentity);		
-		if (requester == null || requester.getGroup() != Group.ADMIN)
+		if (requester == null || (requester.getIdentity() != personTemplate.getIdentity() && requester.getGroup() != Group.ADMIN))
 			throw new ClientErrorException(Status.FORBIDDEN);
 		
-		final boolean insert = template.getIdentity() == 0; 
+		final boolean insert = personTemplate.getIdentity() == 0; 
 		final Person person;  
 
 		if(insert) {
@@ -391,7 +429,7 @@ public class EntityService {
 			if(avatar == null) throw new ClientErrorException(Status.NOT_FOUND);
 			person = new Person(avatar);
 		} else {
-			person = radioManager.find(Person.class,template.getIdentity());
+			person = radioManager.find(Person.class,personTemplate.getIdentity());
 			if(person == null) throw new ClientErrorException(Status.NOT_FOUND);
 			if(avatarReference != null) {
 				final Document avatar = radioManager.find(Document.class, avatarReference);
@@ -400,10 +438,12 @@ public class EntityService {
 			}
 		}
 
-		person.setEmail(template.getEmail());
-		person.setGroup(template.getGroup());
-		person.setForename(template.getForename());
-		person.setSurname(template.getSurname());
+		person.setEmail(personTemplate.getEmail());
+		person.setGroup(personTemplate.getGroup());
+		person.setForename(personTemplate.getForename());
+		person.setSurname(personTemplate.getSurname());
+		person.setLastTransmissionTimestamp(personTemplate.getLastTransmissionTimestamp());
+		person.setWebAdress(personTemplate.getWebAdress());
 		if(password != null) person.setPasswordHash(HashTools.sha256HashCode(password));
 		
 		if(insert) {

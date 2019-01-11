@@ -92,9 +92,14 @@ public class Album extends BaseEntity {
 		this.releaseYear = releaseYear;
 	}
 
-	@JsonbTransient 
-	public Set<Track> getTracks() {
-		return tracks;
+	@JsonbTransient
+	public Set<Track> getTracks(){
+		return this.tracks;
+	}
+	
+	@JsonbProperty
+	public long[] getTrackReferences() {
+		return this.tracks.stream().mapToLong(track -> track.getIdentity()).sorted().toArray();
 	}
 
 	@JsonbProperty 
@@ -114,5 +119,10 @@ public class Album extends BaseEntity {
  
 	public void setCover(Document cover) {
 		this.cover = cover;
+	}
+	
+	@JsonbProperty
+	public long getCoverReference() {
+		return this.cover == null ? 0L : this.cover.getIdentity();
 	}
 }
