@@ -8,8 +8,8 @@
 	// imports
 	const Controller = de_sb_radio.Controller;
 
-	
-	
+
+
 
 	var myAudio = document.querySelector('audio');
 
@@ -20,14 +20,28 @@
 	 */
 	const ServerRadioController = function() {
 		Controller.call(this);
-		
+
 		Object.defineProperty(this, 'leftAudioSource', {
 			enumerable: false,
 			configurable: false,
 			writable: true,
 			value: null
 		});
-		
+
+		Object.defineProperty(this, 'leftgainNode', {
+			enumerable: false,
+			configurable: false,
+			writable: true,
+			value: null
+		});
+		Object.defineProperty(this, 'rightgainNode', {
+			enumerable: false,
+			configurable: false,
+			writable: true,
+			value: null
+		});
+
+
 		Object.defineProperty(this, 'rightAudioSource', {
 			enumerable: false,
 			configurable: false,
@@ -47,7 +61,7 @@
 		writable: true,
 		value: async function() {
 			if(!Controller.audioContext) Controller.audioContext = new AudioContext();
-			
+
 			this.displayError();
 			var genres,artists = [];
 
@@ -191,14 +205,14 @@
 
 				let buffer = await response.arrayBuffer();
 
-				if(source != null)
-					source.stop(0);
-				source = Controller.audioContext.createBufferSource();
-				gainNode = Controller.audioContext.createGain();
-				source.connect(gainNode);
-				gainNode.connect(Controller.audioContext.destination);
-				console.log(Controller.audioContext.currentTime);
-				
+				if(this.leftAudioSource != null)
+					this.leftAudioSource.stop(0);
+				this.leftAudioSource = Controller.audioContext.createBufferSource();
+				this.leftgainNode = Controller.audioContext.createGain();
+				this.leftAudioSource.connect(this.leftgainNode);
+				this.leftgainNode.connect(Controller.audioContext.destination);
+
+
 
 
 				let volumeSlider = document.getElementById("volumeRange");
@@ -207,36 +221,101 @@
 
 				volumeSlider.oninput = function() {
 					volumeValue.innerHTML = parseInt((this.value * 50),10);
-					gainNode.gain.value = this.value;
-					console.log(gainNode.gain.value);
+					this.leftgainNode.gain.value = this.value;
+
 				}
 				let songDuration = 15;
-				Controller.audioContext.decodeAudioData(buffer, decodedData => {
+				await Controller.audioContext.decodeAudioData(buffer, decodedData => {
 					//Alternative await decodeAudioData
-					source.loop = false;
-					source.buffer = decodedData;
-					songDuration = source.buffer.duration;
-					source.start(0);
+//					source.loop = false;
+					this.leftAudioSource.buffer = decodedData;
+//					songDuration = source.buffer.duration;
+//					source.start(0);
 				});
+				console.log(this.leftAudioSource);
+				this.leftAudioSource.start(0);
+				console.log(await this.leftAudioSource.buffer.duration);
 //				console.log("songDuration: " + songDuration);
 
-				gainNode.gain.setValueAtTime(0 , 0.0)								//FADE IN
-				gainNode.gain.linearRampToValueAtTime(volumeSlider.value ,  5.0);	//FADE IN
-				gainNode.gain.linearRampToValueAtTime(0.0, songDuration - 5.0);		//FADE OUT
+
 				var breakPoint = (songDuration - 10.0) * 1000;
-				console.log(songDuration);
 				index+=1;
-				
-				//setTimeout(() => this.playAudio(index), breakPoint);
+
+				setTimeout(() => this.startFadeIn(index), breakPoint);
 
 
 			} catch (error) {
 				this.displayError(error);
 			}
-			
+
 		}
 	});
+	/**
+	 *
+	 */
+	Object.defineProperty(ServerRadioController.prototype, 'startFadeIn', {
+		enumerable: false,
+		configurable: false,
+		value: async function(index) {
+			try {
+				let identity = this.tracks[index].recordingReference;
+				let compressionRatio = document.getElementById("compressionRatio").value;
+				let uri = '/services/documents/' + identity;
+				if(compressionRatio != 1.0) uri+= "?audioCompressionRatio=" + compressionRatio;
 
+				let response = await fetch(uri, {
+					method: 'GET', // *GET, POST, PUT, DELETE, etc.
+					credentials: 'include', // include, *same-origin, omit
+					headers: { Accept: 'audio/*' }
+				});
+				if (!response.ok)
+					throw new Error(response.status + ' ' + response.statusText);
+
+				let buffer = await response.arrayBuffer();
+
+				if(this.rightAudioSource != null)
+					this.rightAudioSource.stop(0);
+				this.rightAudioSource = Controller.audioContext.createBufferSource();
+				this.rightgainNode = Controller.audioContext.createGain();
+				this.rightAudioSource.connect(this.rightgainNode);
+				this.rightgainNode.connect(Controller.audioContext.destination);
+
+
+
+
+				let volumeSlider = document.getElementById("volumeRange");
+				let volumeValue = document.getElementById("volumeValue");
+				volumeValue.innerHTML = volumeSlider.value;
+
+				volumeSlider.oninput = function() {
+					volumeValue.innerHTML = parseInt((this.value * 50),10);
+					this.rightgainNode.gain.value = this.value;
+
+				}
+				await Controller.audioContext.decodeAudioData(buffer, decodedData => {
+					//Alternative await decodeAudioData
+//					source.loop = false;
+					this.rightAudioSource.buffer = decodedData;
+//					songDuration = source.buffer.duration;
+//					source.start(0);
+				});
+				console.log(this.rightAudioSource);
+				this.rightAudioSource.start(0);
+
+				this.rightgainNode.gain.setValueAtTime(0 , 0.0)								//FADE IN
+				this.rightgainNode.gain.linearRampToValueAtTime(volumeSlider.value ,  5.0);	//FADE IN
+				this.leftgainNode.gain.linearRampToValueAtTime(0.0, 5.0);		//FADE OUT
+
+			} catch (error) {
+				this.displayError(error);
+			}
+
+
+
+		}
+	
+
+});
 
 	/**
 	 *
@@ -350,15 +429,15 @@
 				let artist = this.tracks[0].artist;
 				let trackName = this.tracks[0].name;
 
-//				try {
-//				const lyrics = await this.queryLyrics(artist, trackName);
-//				console.log(lyrics);
-//				artistAndTrack.innerHTML = "Lyrics for " + artist + ", " + trackName;
-//				lyricsText.value = lyrics.result.track.text;
-//				} catch (error) {
-//				this.displayError(error);
-//				lyricsText.value = "no such song found in database";
-//				}
+				try {
+					const lyrics = await this.queryLyrics(artist, trackName);
+					console.log(lyrics);
+					artistAndTrack.innerHTML = "Lyrics for " + artist + ", " + trackName;
+					lyricsText.value = lyrics.result.track.text;
+				} catch (error) {
+					this.displayError(error);
+					lyricsText.value = "no such song found in database";
+				}
 
 			} catch (error) {
 				this.displayError(error);
