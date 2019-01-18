@@ -28,19 +28,12 @@
 			value: null
 		});
 
-		Object.defineProperty(this, 'leftgainNode', {
+		Object.defineProperty(this, 'gainNode', {
 			enumerable: false,
 			configurable: false,
 			writable: true,
 			value: null
 		});
-		Object.defineProperty(this, 'rightgainNode', {
-			enumerable: false,
-			configurable: false,
-			writable: true,
-			value: null
-		});
-
 
 		Object.defineProperty(this, 'rightAudioSource', {
 			enumerable: false,
@@ -188,7 +181,7 @@
 		configurable: false,
 		value: async function(index) {
 			let source = null;
-			let gainNode = null;
+			
 			try {
 				let identity = this.tracks[index].recordingReference;
 				let compressionRatio = document.getElementById("compressionRatio").value;
@@ -205,12 +198,12 @@
 
 				let buffer = await response.arrayBuffer();
 
-				if(this.leftAudioSource != null)
-					this.leftAudioSource.stop(0);
+//				if(this.leftAudioSource != null)
+//				this.leftAudioSource.stop(0);
 				this.leftAudioSource = Controller.audioContext.createBufferSource();
-				this.leftgainNode = Controller.audioContext.createGain();
-				this.leftAudioSource.connect(this.leftgainNode);
-				this.leftgainNode.connect(Controller.audioContext.destination);
+				let gainNode = Controller.audioContext.createGain();
+				this.leftAudioSource.connect(gainNode);
+				gainNode.connect(Controller.audioContext.destination);
 
 
 
@@ -221,27 +214,23 @@
 
 				volumeSlider.oninput = function() {
 					volumeValue.innerHTML = parseInt((this.value * 50),10);
-					this.leftgainNode.gain.value = this.value;
+					this.gainNode.gain.value = this.value;
 
 				}
 				let songDuration = 15;
 				await Controller.audioContext.decodeAudioData(buffer, decodedData => {
 					//Alternative await decodeAudioData
-//					source.loop = false;
 					this.leftAudioSource.buffer = decodedData;
-//					songDuration = source.buffer.duration;
-//					source.start(0);
 				});
-				console.log(this.leftAudioSource);
+				
+
 				this.leftAudioSource.start(0);
-				console.log(await this.leftAudioSource.buffer.duration);
-//				console.log("songDuration: " + songDuration);
 
 
 				var breakPoint = (songDuration - 10.0) * 1000;
 				index+=1;
 
-				setTimeout(() => this.startFadeIn(index), breakPoint);
+				setTimeout(() => this.startFadeIn(index,gainNode), breakPoint);
 
 
 			} catch (error) {
@@ -256,7 +245,7 @@
 	Object.defineProperty(ServerRadioController.prototype, 'startFadeIn', {
 		enumerable: false,
 		configurable: false,
-		value: async function(index) {
+		value: async function(index,gainNodeBefore) {
 			try {
 				let identity = this.tracks[index].recordingReference;
 				let compressionRatio = document.getElementById("compressionRatio").value;
@@ -273,12 +262,12 @@
 
 				let buffer = await response.arrayBuffer();
 
-				if(this.rightAudioSource != null)
-					this.rightAudioSource.stop(0);
+//				if(this.leftAudioSource != null)
+//				this.leftAudioSource.stop(0);
 				this.rightAudioSource = Controller.audioContext.createBufferSource();
-				this.rightgainNode = Controller.audioContext.createGain();
-				this.rightAudioSource.connect(this.rightgainNode);
-				this.rightgainNode.connect(Controller.audioContext.destination);
+				let gainNode = Controller.audioContext.createGain();
+				this.rightAudioSource.connect(gainNode);
+				gainNode.connect(Controller.audioContext.destination);
 
 
 
@@ -289,23 +278,23 @@
 
 				volumeSlider.oninput = function() {
 					volumeValue.innerHTML = parseInt((this.value * 50),10);
-					this.rightgainNode.gain.value = this.value;
+					gainNode.gain.value = this.value;
 
 				}
 				await Controller.audioContext.decodeAudioData(buffer, decodedData => {
 					//Alternative await decodeAudioData
-//					source.loop = false;
 					this.rightAudioSource.buffer = decodedData;
-//					songDuration = source.buffer.duration;
-//					source.start(0);
 				});
-				console.log(this.rightAudioSource);
+				gainNode.gain.setValueAtTime(0 , 0.0)								//FADE IN
 				this.rightAudioSource.start(0);
 
-				this.rightgainNode.gain.setValueAtTime(0 , 0.0)								//FADE IN
-				this.rightgainNode.gain.linearRampToValueAtTime(volumeSlider.value ,  5.0);	//FADE IN
-				this.leftgainNode.gain.linearRampToValueAtTime(0.0, 5.0);		//FADE OUT
+				gainNode.gain.linearRampToValueAtTime(volumeSlider.value , Controller.audioContext.currentTime + 5.0);	//FADE IN
+				gainNodeBefore.gain.linearRampToValueAtTime(0.0,Controller.audioContext.currentTime + 5.0);		//FADE OUT
 
+				console.log("right " ,this.rightAudioSource);
+				console.log("left ", this.leftAudioSource);
+				console.log("right Node " ,gainNode);
+				console.log("left Node", gainNodeBefore);
 			} catch (error) {
 				this.displayError(error);
 			}
