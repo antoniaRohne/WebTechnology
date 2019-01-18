@@ -12,7 +12,14 @@ this.de_sb_radio = this.de_sb_radio || {};
 	 */
 	const Controller = de_sb_radio.Controller = function () {}
 
-
+	Object.defineProperty(Controller, 'audioContext', {
+		enumerable: false,
+		configurable: false,
+		writable: true,
+		value: null
+	});
+	
+	
 	/**
 	 * Displays the view associated with this controller.
 	 */

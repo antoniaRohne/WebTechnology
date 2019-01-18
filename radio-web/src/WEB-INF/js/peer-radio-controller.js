@@ -81,7 +81,7 @@
 			console.log('Created send data channel: ', sendChannel);
 	
 			var context = new AudioContext();
-			var reader = new FileReader();
+			var reader = new FileReader();		FilreReader as await Promise
 			 
 			reader.onload = (function(readEvent) {
 				context.decodeAudioData(readEvent.target.result, function(buffer) {

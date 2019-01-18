@@ -24,17 +24,17 @@ public class DocumentHelperClass {
 	final static EntityManager RADIO_MANAGER = RADIO_FACTORY.createEntityManager();
 
 	static public void main(final String[] args) throws IOException {
-		Path recordingFilePath = Paths.get(args[0]);
+//		Path recordingFilePath = Paths.get(args[0]);
 		Path coverFilePath = Paths.get(args[1]);
 
 		long coverReference = addDocument(coverFilePath, "image/jpeg");
 		System.out.println(coverReference);
-		long recordingReference = addDocument(recordingFilePath, "music/mp3");
-		System.out.println(recordingReference);
-		long albumIdentity = addAlbum(coverReference);
-		System.out.println(albumIdentity);
-		long trackIdentity = addTrack(recordingReference, albumIdentity, 3); 
-		System.out.println(trackIdentity);
+//		long recordingReference = addDocument(recordingFilePath, "music/mp3");
+//		System.out.println(recordingReference);
+//		long albumIdentity = addAlbum(coverReference);
+//		System.out.println(albumIdentity);
+		//long trackIdentity = addTrack(recordingReference, 65, 20); 
+//		System.out.println(trackIdentity);
 		
 	}
 
@@ -45,7 +45,7 @@ public class DocumentHelperClass {
 		//if(person == null) throw new ClientErrorException(Status.NOT_FOUND);
 		final Album album = RADIO_MANAGER.find(Album.class,albumIdentity);
 		Track track = new Track(recording,person,album);
-		track.setGenre("genre");  // TODO: bearbeiten
+		track.setGenre("rock");  // TODO: bearbeiten
 		
 		RADIO_MANAGER.persist(track);
 		RADIO_MANAGER.getTransaction().commit();
