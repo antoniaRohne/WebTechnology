@@ -272,6 +272,7 @@
 					volumeValue.innerHTML = parseInt((this.value * 50),10);
 					this.rightGainNode.gain.value = this.value;
 				}
+<<<<<<< HEAD
 				
 				this.rightAudioSource = Controller.audioContext.createBufferSource();
 				this.rightAudioSource.connect(this.rightGainNode);
@@ -291,7 +292,7 @@
 				
 				// this.leftAudioSource.ended = event => this.switchAudioSource();
 				setTimeout(() => this.switchAudioSource(), Controller.audioContext.currentTime + 10.0);
-
+				
 			} catch (error) {
 				this.displayError(error);
 			}
