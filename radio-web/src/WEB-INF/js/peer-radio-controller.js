@@ -4,10 +4,8 @@
 	// imports
 	const Controller = de_sb_radio.Controller;
 	
-	let localConnection;
-	let remoteConnection;
+	let peerConnection;
 	let sendChannel;
-	let receiveChannel;
 	
 	let nextId = 0;
 	let files;
@@ -44,7 +42,6 @@
 			mainElement.querySelector("#receiveButton").addEventListener("click", event => this.listen());
 		}
 	});
-	/*
 	
 	Object.defineProperty(PeerRadioController.prototype, "sendModus", {
 		enumerable: false,
@@ -63,38 +60,6 @@
 		}
 	});
 	
-	Object.defineProperty(PeerRadioController.prototype, "listen", {
-		enumerable: false,
-		configurable: false,
-		writable: true,
-		value: async function () {
-			mainElement.querySelector("#chooseModus").remove();
-			
-			let sendingPersons = await fetch("/services/people", {
-		        method: "GET", // *GET, POST, PUT, DELETE, etc.
-		        credentials: "include", // include, *same-origin, omit
-		        headers: {
-		              'Accept': 'application/json',
-				'Content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
-		        }
-		    }).then(res => res.json()).catch(function (error) {
-		        console.log(error);
-		       });
-			
-			let personList = document.createElement('ul');
-			
-			for(let person of sendingPersons){
-				//if(Date.now()-person.lastTransmissionTimestamp<???){
-				let personEntry = document.createElement('li'); //=> to buttons so the user can click on ?
-				personEntry.innerHTML = person.surname;
-				personEntry.addEventListener("click", event => this.startListen());
-				personList.appendChild(personEntry);
-			}	
-			
-			mainElement.appendChild(personList);
-		}
-	});
-
 	Object.defineProperty(PeerRadioController.prototype, "startTracks", {
 		enumerable: false,
 		configurable: false,
@@ -102,23 +67,19 @@
 			this.files = mainElement.querySelector("#fileChooser").files;
 			let fileList = document.createElement('ul');
 			
-			for(let i=0; i<files.length;i++){
+			for(let i=0; i<this.files.length;i++){
 				let fileEntry = document.createElement('li');
-				fileEntry.innerHTML = files[i].name;
+				fileEntry.innerHTML = this.files[i].name;
 				fileList.appendChild(fileEntry);
 			}	
 			
 			mainElement.appendChild(fileList);
 			
-			localConnection = new RTCPeerConnection(); //need something as parameter ?
+			peerConnection = new RTCPeerConnection();
 
-			sendChannel = localConnection.createDataChannel("sendChannel");
+			sendChannel = peerConnection.createDataChannel("sendChannel");
 			console.log('Created send data channel: ', sendChannel);
-			 
-			localConnection.addEventListener('icecandidate', e => onIceCandidate(localConnection, e));
-			
-			console.log('Peer connection setup complete.');
-			
+	
 			var context = new AudioContext();
 			var reader = new FileReader();
 			 
@@ -133,47 +94,67 @@
 			        var remote = context.createMediaStreamDestination();
 			        source.connect(remote);
 			 
-			        localConnection.addStream(remote.stream);
+			        peerConnection.addStream(remote.stream);
 			 
-			        sendOffer();	        
+			        this.sendOffer();	        
 			    });
 			});
-			 
-			      reader.readAsArrayBuffer(files[nextId]);
-	
-			if(mainElement.querySelector("#player") == null){
-			let audioPlayer = document.createElement("AUDIO");
-			audioPlayer.id = "player";
-			audioPlayer.setAttribute("src",URL.createObjectURL(files[nextId]));
-			mainElement.querySelector("ul").childNodes[nextId].classList.add("selected");
-			audioPlayer.addEventListener("ended", this.playNext);
-			mainElement.appendChild(audioPlayer);
-			audioPlayer.play();
-			}
 		}
-	});*/
-
-
+	});
+	/**
+	* Creates and offer and send it to the database
+	*/
 	Object.defineProperty(PeerRadioController.prototype, "sendOffer", {
 		enumerable: false,
 		configurable: false,
 		value: async function () {
-			let offer = await this.localConnection.createOffer(description => localConnection.setLocalDescription(description));
-
+			let offerDescription = await this.peerConnection.createOffer();
+			this.peerConnection.setLocalDescription(offerDescription);
+	
 			let timestamp = Date.now()*1000;
-	        const ressource = "/services/people/" + Controller.sessionOwner.identity;
-	        const body = JSON.stringify({"lastTransmissionTimestamp": timestamp, "webAdress": description});
-	        console.log(ressource);
-
-	        let reponse = await fetch(ressource, { method: "POST", credentials: "include", body: body, headers: { 'Content-type': 'application/json' }});
+			Controller.sessionOwner.lastTransmissionTimestamp = timestamp;
+			Controller.sessionOwner.webAdress = JSON.stringify(offerDescription);
+			const body = JSON.stringify(Controller.sessionOwner);
+	
+			let response = await fetch("/services/people", {method: "POST", credentials: "include", body: body, headers: { 'Content-type': 'application/json' }});
 			if(!response.ok) throw new Error(response.status + " " + response.statusText);
-				
+						
+			console.log(Controller.sessionOwner);
+							
 			console.log("Finish fetch post person");
 		}
-	});
+	});		
 
-	/*
-	Object.defineProperty(PeerRadioController.prototype, "playNext", {
+	Object.defineProperty(PeerRadioController.prototype, "listen", {
+		enumerable: false,
+		configurable: false,
+		writable: true,
+		value: async function () {
+			mainElement.querySelector("#chooseModus").remove();
+			
+			let fiveMinTimestamp = (Date.now()*1000) - (5 * 60 * 1000);
+			let uri = "/services/people?lastTransmissionTimestamp<=" + fiveMinTimestamp;
+			
+			let response = await fetch(uri,{method: "GET", credentials: "include",headers:{'Accept': 'application/json'}});
+			if(!response.ok) throw new Error(response.status + " " + response.statusText);
+			
+			let sendingPersons = await response.json();
+			
+			if(sendingPersons == null){
+				console.log("no one is sending currently");
+			}
+			
+			for(let person of sendingPersons){
+				let btn = document.createElement("BUTTON");
+				let t = document.createTextNode(person.surname);      
+				btn.appendChild(t);                                
+				mainElement.appendChild(btn);                   
+				btn.addEventListener("click", event => this.startListen());
+			}	
+		}
+	});
+	
+	/*Object.defineProperty(PeerRadioController.prototype, "playNext", {
 		enumerable: false,
 		configurable: false,
 		writable: true,
@@ -186,54 +167,10 @@
 			mainElement.querySelector("ul").childNodes[nextId].classList.add("selected");
 			audioPlayer.play();
 		}
-	});
+	});*/
 	
-	Object.defineProperty(PeerRadioController.prototype, "startListen", {
-		enumerable: false,
-		configurable: false,
-		writable: true,
-		value: async function () {
-			localConnection = new RTCPeerConnection();
-			localConnection.addEventListener('icecandidate', e => onIceCandidate(localConnection, e));
-			localConnection.addEventListener('track', gotRemoteStream);
-			
-			
-		}
-	});	
 
-	async function onIceCandidate(pc, event) {
-		  const candidate = event.candidate;
-		  if (candidate === null) {
-		    return;
-		  } // Ignore null candidates
-		  try {
-		    await localConnection.addIceCandidate(candidate);
-		    console.log('AddIceCandidate successful: ', candidate);
-		  } catch (e) {
-		    console.error('Failed to add Ice Candidate: ', e);
-		  }
-	}
-	
-	async function handleRemoteDescription(desc) {
-		  localConnection.setRemoteDescription(desc);
-		  console.log('Offer from localConnection:\n', desc.sdp);
-		  try {
-		    await localConnection.createAnswer(handleLocalDescription);
-		  } catch (e) {
-		    console.error('Error when creating remote answer: ', e);
-		  }
-	}
-	
-	async function handleLocalDescription(desc) {
-		  localConnection.setLocalDescription(desc);
-	}
-	
-	function gotRemoteStream(event) {
-		  var player = new Audio();
-		  attachMediaStream(player, event.stream);
-		  player.play();
-		}
-	*/
+
 	/**
 	 * Perform controller callback registration during DOM load event handling.
 	 */

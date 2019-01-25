@@ -14,7 +14,7 @@
     <script src="js/controller.js"></script>
     <script src="js/welcome-controller.js"></script>
     <script src="js/server-radio-controller.js"></script>
-    <script src="js/test-controller.js"></script>
+    <script src="js/peer-radio-controller.js"></script>
 
     <template id="login-template">
       <section class="login">
@@ -68,7 +68,7 @@
 
 	     <div class="slidecontainer">
         	<input class="slider" id="volumeRange" type="range" min="0" max="2" value="1" step="0.02">
-        	<p>Volume: <span id="volumeValue"></span></p>
+        	<p>Volume: <output id="volumeValue"></output></p>
         </div>
 
 
@@ -93,6 +93,23 @@
         <button type="button" id="sendButton">Send</button>
         <button type="button" id="receiveButton">Receive</button>
       </div>
+      <section id="recieve_send_section">
+	      <template id="peer-radio-send-template">
+	      <input type = 'file' id = "fileChooser" accept ="audio/mp3, audio/wav" multiple />
+		      <select name="send-items" class="customScrollBar">
+			      <option value="Hard Rock">Hard Rock</option>
+			      <option value="Pop">Pop</option>
+			      <option value="Rock" selected="">Rock</option>
+		      </select>
+	      </template>
+	      <template id="peer-radio-recieve-template">
+		      <select multiple name="recieve-items" class="customScrollBar">
+			      <option value="Hard Rock">Hard Rock</option>
+			      <option value="Pop">Pop</option>
+			      <option value="Rock" selected="">Rock</option>
+		      </select>
+	      </template>
+      </section>
     </template>
   </head>
 
