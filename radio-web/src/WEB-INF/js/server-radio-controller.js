@@ -7,12 +7,7 @@
 (function() {
 	// imports
 	const Controller = de_sb_radio.Controller;
-
-
-
-
 	var myAudio = document.querySelector('audio');
-
 	let tracks = null;
 
 	/**
@@ -190,7 +185,7 @@
 			this.leftAudioSource.connect(this.gainNode);
 			this.gainNode.connect(Controller.audioContext.destination);
 			this.leftAudioSource.start();
-			
+			this.tracks.shift();
 			const breakPoint = (this.leftAudioSource.buffer.duration - 10.0) * 1000;
 			setTimeout(() => this.startFadeIn(0, this.gainNode), breakPoint);
 		}
@@ -288,14 +283,7 @@
 				this.rightAudioSource.start(0);
 				gainNode.gain.linearRampToValueAtTime(volumeSlider.value , Controller.audioContext.currentTime + 10.0);	//FADE IN
 				gainNodeOfSongBefore.gain.linearRampToValueAtTime(0.0,Controller.audioContext.currentTime + 10.0);		//FADE OUT
-//				setTimeout(() => this.startFadeIn(index,gainNode), 5);
 				
-				
-
-				console.log("right " ,this.rightAudioSource);
-				console.log("left ", this.leftAudioSource);
-				console.log("right Node " ,gainNode);
-				console.log("left Node", gainNodeOfSongBefore);
 			} catch (error) {
 				this.displayError(error);
 			}
