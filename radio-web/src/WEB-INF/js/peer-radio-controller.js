@@ -67,9 +67,9 @@
 			this.files = mainElement.querySelector("#fileChooser").files;
 			let fileList = document.createElement('ul');
 			
-			for(let i=0; i<files.length;i++){
+			for(let i=0; i<this.files.length;i++){
 				let fileEntry = document.createElement('li');
-				fileEntry.innerHTML = files[i].name;
+				fileEntry.innerHTML = this.files[i].name;
 				fileList.appendChild(fileEntry);
 			}	
 			
@@ -81,7 +81,7 @@
 			console.log('Created send data channel: ', sendChannel);
 	
 			var context = new AudioContext();
-			var reader = new FileReader();		FilreReader as await Promise
+			var reader = new FileReader();
 			 
 			reader.onload = (function(readEvent) {
 				context.decodeAudioData(readEvent.target.result, function(buffer) {
