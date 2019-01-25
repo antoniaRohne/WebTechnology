@@ -8,11 +8,7 @@
 	// imports
 	const Controller = de_sb_radio.Controller;
 
-
-
-
 	var myAudio = document.querySelector('audio');
-
 	let tracks = null;
 
 	/**
@@ -28,7 +24,14 @@
 			value: null
 		});
 
-		Object.defineProperty(this, 'gainNode', {
+		Object.defineProperty(this, 'rightGainNode', {
+			enumerable: false,
+			configurable: false,
+			writable: true,
+			value: null
+		});
+		
+		Object.defineProperty(this, 'leftGainNode', {
 			enumerable: false,
 			configurable: false,
 			writable: true,
@@ -59,7 +62,6 @@
 			var genres,artists = [];
 
 			try {
-				//var genres = JSON.parse(await this.xhr("/services/tracks/genres?offset=0&limit=100", "GET", {"Accept": "application/json"}, "", "text", "ines.bergmann@web.de", "ines"));
 				var response = await fetch('/services/tracks/genres?offset=0&limit=100', {
 					method: 'GET', // *GET, POST, PUT, DELETE, etc.
 					credentials: 'include', // include, *same-origin, omit
@@ -72,7 +74,6 @@
 					throw new Error(response.status + ' ' + response.statusText);
 
 				genres = await response.json();
-				//	var artists = JSON.parse(await this.xhr("/services/tracks/artists", "GET", {"Accept": "application/json"}, "", "text", "ines.bergmann@web.de", "ines"));
 				response = await fetch('/services/tracks/artists', {
 					method: 'GET', // *GET, POST, PUT, DELETE, etc.
 					credentials: 'include', // include, *same-origin, omit
@@ -177,22 +178,15 @@
 	});
 	
 	
-	// by endeing delete the first element in track array
+	// by ending delete the first element in track array
 	Object.defineProperty(ServerRadioController.prototype, 'switchAudioSource', {
 		enumerable: false,
 		configurable: false,
 		value: function() {
-			// TODO: if ersetzen mit Entfernen top von TracksArray, dann erzeugen eines neuen this.rightAudiouSource, mit Hilfe des neuen TopTracksArray 
-			if(!this.rightAudioSource) return;
 			this.leftAudioSource = this.rightAudioSource;
-			
-			this.gainNode = Controller.audioContext.createGain();
-			this.leftAudioSource.connect(this.gainNode);
-			this.gainNode.connect(Controller.audioContext.destination);
-			this.leftAudioSource.start();
-			
-			const breakPoint = (this.leftAudioSource.buffer.duration - 10.0) * 1000;
-			setTimeout(() => this.startFadeIn(0, this.gainNode), breakPoint);
+			this.leftGainNode = this.rightGainNode;
+			this.tracks.shift();
+			console.log("Tracks nach Shift: " + this.tracks);
 		}
 	});
 	
@@ -215,31 +209,36 @@
 					credentials: 'include', // include, *same-origin, omit
 					headers: { Accept: 'audio/*' }
 				});
+				
 				if (!response.ok)
 					throw new Error(response.status + ' ' + response.statusText);
 
-				let volumeSlider = document.getElementById("volumeRange"); // wozu zwei DOM-ELemente für einen Slider?
+				this.leftGainNode = Controller.audioContext.createGain();
+				let volumeSlider = document.getElementById("volumeRange");
 				let volumeValue = document.getElementById("volumeValue");
 				volumeValue.value = volumeSlider.value;
 				volumeSlider.oninput = event => {
 					volumeValue.value = parseInt((volumeSlider.value * 50),10);
-					this.gainNode.gain.value = volumeSlider.value;
+					this.leftGainNode.gain.value = volumeSlider.value;
 				}
 				
 				let buffer = await response.arrayBuffer();
-				this.rightAudioSource = Controller.audioContext.createBufferSource();
+				this.leftAudioSource = Controller.audioContext.createBufferSource();
 				let decodedAudio = await Controller.audioContext.decodeAudioData(buffer);
-				this.rightAudioSource.buffer = decodedAudio;
-				this.rightAudioSource.ended = event => this.switchAudioSource();
-				this.switchAudioSource();
+				this.leftAudioSource.buffer = decodedAudio;
+				this.leftAudioSource.connect(this.leftGainNode);
+				this.leftGainNode.connect(Controller.audioContext.destination);
+				this.leftAudioSource.start(0);
+				
+				const breakPoint = (this.leftAudioSource.buffer.duration - 10.0) * 1000;
+				setTimeout(() => this.startFadeIn(1), 20000);
+			
 			} catch (error) {
 				this.displayError(error);
 			}
 			
 		}
 	});
-	
-	
 
 	/**
 	 *
@@ -247,8 +246,9 @@
 	Object.defineProperty(ServerRadioController.prototype, 'startFadeIn', {
 		enumerable: false,
 		configurable: false,
-		value: async function(index,gainNodeOfSongBefore) {
+		value: async function(index) {
 			try {
+				//if(this.tracks[index] != null){ return;}
 				let identity = this.tracks[index].recordingReference;
 				let compressionRatio = document.getElementById("compressionRatio").value;
 				let uri = '/services/documents/' + identity;
@@ -258,53 +258,44 @@
 					method: 'GET', // *GET, POST, PUT, DELETE, etc.
 					credentials: 'include', // include, *same-origin, omit
 					headers: { Accept: 'audio/*' }
-				});
+				}); 
+				
 				if (!response.ok)
 					throw new Error(response.status + ' ' + response.statusText);
-
-				let buffer = await response.arrayBuffer();
-
-//				if(this.leftAudioSource != null)
-//				this.leftAudioSource.stop(0);
-				this.rightAudioSource = Controller.audioContext.createBufferSource();
-				let gainNode = Controller.audioContext.createGain();
-				this.rightAudioSource.connect(gainNode);
-				gainNode.connect(Controller.audioContext.destination);
-
+			
 				let volumeSlider = document.getElementById("volumeRange");
 				let volumeValue = document.getElementById("volumeValue");
 				volumeValue.innerHTML = volumeSlider.value;
 
+				this.rightGainNode = Controller.audioContext.createGain();
 				volumeSlider.oninput = function() {
 					volumeValue.innerHTML = parseInt((this.value * 50),10);
-					gainNode.gain.value = this.value;
-
+					this.rightGainNode.gain.value = this.value;
 				}
-				await Controller.audioContext.decodeAudioData(buffer, decodedData => {
-					//Alternative await decodeAudioData
-					this.rightAudioSource.buffer = decodedData;
-				});
-				gainNode.gain.setValueAtTime(0 , 0.0)								//FADE IN
+				
+				this.rightAudioSource = Controller.audioContext.createBufferSource();
+				this.rightAudioSource.connect(this.rightGainNode);
+				this.rightGainNode.connect(Controller.audioContext.destination);
+				
+				let buffer = await response.arrayBuffer();
+				let decodedAudio = await Controller.audioContext.decodeAudioData(buffer);
+				this.rightAudioSource.buffer = decodedAudio;
+				
+				const breakPoint = (this.rightAudioSource.buffer.duration - 10.0) * 1000;
+				setTimeout(() => this.startFadeIn(1), 30000);
+				
+				this.rightGainNode.gain.setValueAtTime(0 , 0.0)								//FADE IN
 				this.rightAudioSource.start(0);
-				gainNode.gain.linearRampToValueAtTime(volumeSlider.value , Controller.audioContext.currentTime + 10.0);	//FADE IN
-				gainNodeOfSongBefore.gain.linearRampToValueAtTime(0.0,Controller.audioContext.currentTime + 10.0);		//FADE OUT
-//				setTimeout(() => this.startFadeIn(index,gainNode), 5);
+				this.rightGainNode.gain.linearRampToValueAtTime(volumeSlider.value , Controller.audioContext.currentTime + 5.0);	//FADE IN
+				this.leftGainNode.gain.linearRampToValueAtTime(0.0,Controller.audioContext.currentTime + 5.0);		//FADE OUT
 				
-				
+				// this.leftAudioSource.ended = event => this.switchAudioSource();
+				setTimeout(() => this.switchAudioSource(), Controller.audioContext.currentTime + 10.0);
 
-				console.log("right " ,this.rightAudioSource);
-				console.log("left ", this.leftAudioSource);
-				console.log("right Node " ,gainNode);
-				console.log("left Node", gainNodeOfSongBefore);
 			} catch (error) {
 				this.displayError(error);
 			}
-
-
-
 		}
-	
-
 });
 
 	/**
@@ -369,7 +360,7 @@
 					throw new Error(response.status + ' ' + response.statusText);
 
 				this.tracks = await response.json();
-				console.log(this.tracks);
+				console.log("Tracks: "+ this.tracks);
 
 
 				let genreArtistTrackList = document.querySelector('#genreArtistList');
