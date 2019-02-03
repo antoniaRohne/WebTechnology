@@ -111,7 +111,7 @@
 			// rewrite basic option "multiple" behavior , so we can click multiple option at once
 			window.onmousedown = function (e) {
 				var el = e.target;
-				if (el.tagName.toLowerCase() == 'option' && el.parentNode.hasAttribute('multiple')) {
+				if (el.tagName.toLowerCase() == 'option' && el.parentNode.hasAttribute('multiple') && el.parentNode.classList.contains("multipleSelect")) {
 					e.preventDefault();
 
 					// toggle selection
@@ -132,7 +132,7 @@
 			var mySelect = document.createElement('select');
 			mySelect.multiple = true;
 			mySelect.name = "genre"
-				mySelect.classList.add("customScrollBar")
+				mySelect.classList.add("customScrollBar", "multipleSelect")
 				var h2 = document.createElement('h2');
 			h2.innerHTML = "Genres";
 			genreDiv.appendChild(h2);
@@ -155,7 +155,7 @@
 			mySelect = document.createElement('select');
 			mySelect.multiple = true;
 			mySelect.name = "artist";
-			mySelect.classList.add("customScrollBar")
+			mySelect.classList.add("customScrollBar", "multipleSelect")
 			for (let i = 0; i < artists.length; i++) {
 				var myOption = null;
 				myOption = document.createElement('option');
