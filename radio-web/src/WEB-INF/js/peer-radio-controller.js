@@ -4,9 +4,6 @@
 	// imports
 	const Controller = de_sb_radio.Controller;
 	
-	let peerConnection;
-	let sendChannel;
-	
 	let nextId = 0;
 	let files;
 	
@@ -17,6 +14,10 @@
 	 */
 	const PeerRadioController = function () {
 		Controller.call(this);
+		Object.defineProperty(this, "address", { enumerable : true,  writable: true, value: null });
+		Object.defineProperty(this, "connection", { enumerable : true,  writable: true, value: null });
+		Object.defineProperty(this, "channel", { enumerable : true,  writable: true, value: null });
+		
 		mainElement = document.querySelector("main");
 	}
 	PeerRadioController.prototype = Object.create(Controller.prototype);
@@ -75,55 +76,61 @@
 			
 			mainElement.appendChild(fileList);
 			
-			peerConnection = new RTCPeerConnection();
-
-			sendChannel = peerConnection.createDataChannel("sendChannel");
-			console.log('Created send data channel: ', sendChannel);
-	
-			var context = new AudioContext();
+			connection = new RTCPeerConnection();
 			var reader = new FileReader();
 			 
 			reader.onload = (function(readEvent) {
-				context.decodeAudioData(readEvent.target.result, function(buffer) {
-					var source = context.createBufferSource();
+				Controller.audioContext.decodeAudioData(readEvent.target.result, function(buffer) {
+					var source = Controller.audioContext.createBufferSource();
 			        source.buffer = buffer;
-			        source.start(0);
 					//.addEventListener("ended", this.playNext);
-			        source.connect(context.destination);
-			        mainElement.querySelector("ul").childNodes[nextId].classList.add("played");
-			        var remote = context.createMediaStreamDestination();
-			        source.connect(remote);
-			 
-			        peerConnection.addStream(remote.stream);
-			 
-			        this.sendOffer();	        
+			        source.connect(Controller.audioContext.destination);
+			        source.start(0);
+			        //mainElement.querySelector("ul").childNodes[nextId].classList.add("played");
+			        this.sendOffer(buffer);	        
 			    });
 			});
 		}
-	});
+	});	
+	
 	/**
 	* Creates and offer and send it to the database
 	*/
 	Object.defineProperty(PeerRadioController.prototype, "sendOffer", {
 		enumerable: false,
 		configurable: false,
+		writable: true,
 		value: async function () {
-			let offerDescription = await this.peerConnection.createOffer();
-			this.peerConnection.setLocalDescription(offerDescription);
+		if (this.connection) this.connection.close();
+		this.connection = new RTCPeerConnection();
+		this.connection.addEventListener("icecandidate", event => this.handleIceCandidate(event.candidate));
+		this.channel = this.connection.createDataChannel("offer");
+
+		let offer = await this.connection.createOffer();
+		await this.connection.setLocalDescription(offer);	
+		
+		let timestamp = Date.now()*1000;
+		Controller.sessionOwner.lastTransmissionTimestamp = timestamp;
+		Controller.sessionOwner.webAdress = JSON.stringify(offer.sdp);
+		const body = JSON.stringify(Controller.sessionOwner);
+
+		let response = await fetch("/services/people", {method: "POST", credentials: "include", body: body, headers: { 'Content-type': 'application/json' }});
+		if(!response.ok) throw new Error(response.status + " " + response.statusText);
+		
+		console.log("Finish send offer");
+	}});
 	
-			let timestamp = Date.now()*1000;
-			Controller.sessionOwner.lastTransmissionTimestamp = timestamp;
-			Controller.sessionOwner.webAdress = JSON.stringify(offerDescription);
-			const body = JSON.stringify(Controller.sessionOwner);
-	
-			let response = await fetch("/services/people", {method: "POST", credentials: "include", body: body, headers: { 'Content-type': 'application/json' }});
-			if(!response.ok) throw new Error(response.status + " " + response.statusText);
-						
-			console.log(Controller.sessionOwner);
-							
-			console.log("Finish fetch post person");
-		}
-	});		
+
+	Object.defineProperty(PeerRadioController.prototype, "handleIceCandidate", {
+		enumerable: false,
+		configurable: false,
+		writable: true,
+		value: async function (iceCandidate) {
+		if (iceCandidate) return;
+
+		let sdp = this.connection.localDescription.sdp;
+		if (this.address) sdp = sdp.replace(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/g, this.address);
+	}});
 
 	Object.defineProperty(PeerRadioController.prototype, "listen", {
 		enumerable: false,
@@ -154,27 +161,18 @@
 		}
 	});
 	
-	/*Object.defineProperty(PeerRadioController.prototype, "playNext", {
-		enumerable: false,
-		configurable: false,
-		writable: true,
-		value: async function () {
-			let audioPlayer = mainElement.querySelector("#player");
-			audioPlayer.pause();
-			mainElement.querySelector("ul").childNodes[nextId].classList.remove("selected");
-			nextId++;
-			audioPlayer.setAttribute("src",URL.createObjectURL(files[nextId]));
-			mainElement.querySelector("ul").childNodes[nextId].classList.add("selected");
-			audioPlayer.play();
-		}
-	});*/
-	
-
+	// refresh with global IP address of local machine
+	PeerRadioController.refreshAddress = async function () {
+		let response = await fetch("https://api.ipify.org/", { method: "GET", headers: { "Accept": "text/plain" }});
+		if (!response.ok) throw new Error("HTTP " + response.status + " " + response.statusText);
+		this.address = await response.text();
+	}
 
 	/**
 	 * Perform controller callback registration during DOM load event handling.
 	 */
 	window.addEventListener("load", event => {
+		controller.refreshAddress();
 		const anchor = document.querySelector("header li:nth-of-type(3) > a");
 		const controller = new PeerRadioController();
 		anchor.addEventListener("click", event => controller.display());

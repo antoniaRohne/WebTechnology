@@ -10,6 +10,7 @@
 
 	var myAudio = document.querySelector('audio');
 	let tracks = null;
+	let end = false;
 
 	/**
 	 * Creates a new welcome controller that is derived from an abstract controller.
@@ -186,6 +187,7 @@
 			this.leftAudioSource = this.rightAudioSource;
 			this.leftGainNode = this.rightGainNode;
 			this.tracks.shift();
+			if(this.tracks.length==0) end = true;
 			console.log("Tracks nach Shift: " + this.tracks);
 		}
 	});
@@ -197,7 +199,7 @@
 		configurable: false,
 		value: async function(index) {
 			let source = null;
-			
+			if(!end){
 			try {
 				let identity = this.tracks[index].recordingReference;
 				let compressionRatio = document.getElementById("compressionRatio").value;
@@ -232,11 +234,10 @@
 				
 				const breakPoint = (this.leftAudioSource.buffer.duration - 10.0) * 1000;
 				setTimeout(() => this.startFadeIn(1), 20000);
-			
 			} catch (error) {
 				this.displayError(error);
 			}
-			
+		  }	
 		}
 	});
 
@@ -272,8 +273,7 @@
 					volumeValue.innerHTML = parseInt((this.value * 50),10);
 					this.rightGainNode.gain.value = this.value;
 				}
-<<<<<<< HEAD
-				
+
 				this.rightAudioSource = Controller.audioContext.createBufferSource();
 				this.rightAudioSource.connect(this.rightGainNode);
 				this.rightGainNode.connect(Controller.audioContext.destination);
@@ -283,7 +283,7 @@
 				this.rightAudioSource.buffer = decodedAudio;
 				
 				const breakPoint = (this.rightAudioSource.buffer.duration - 10.0) * 1000;
-				setTimeout(() => this.startFadeIn(1), 30000);
+				setTimeout(() => this.startFadeIn(1), 20000);
 				
 				this.rightGainNode.gain.setValueAtTime(0 , 0.0)								//FADE IN
 				this.rightAudioSource.start(0);
