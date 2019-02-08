@@ -4,13 +4,14 @@
 	// imports
 	const Controller = de_sb_radio.Controller;
 
-	let peerConnection;
-	let sendChannel;
-
 	let nextId = 0;
 	let files;
 
 	let mainElement;
+	
+	let context;
+	let audioSource;
+	let gainNode;
 
 	/**
 	 * Creates a new welcome controller that is derived from an abstract
@@ -24,6 +25,7 @@
 		
 		mainElement = document.querySelector("main");
 	}
+	
 	PeerRadioController.prototype = Object.create(Controller.prototype);
 	PeerRadioController.prototype.constructor = PeerRadioController;
 
@@ -49,8 +51,6 @@
 
 			mainElement.querySelector("#sendButton").addEventListener("click", event => this.sendModus());
 			mainElement.querySelector("#receiveButton").addEventListener("click", event => this.listen());
-
-
 		}
 	});
 
@@ -66,13 +66,9 @@
 			console.log(mainElement.children.length >= 2);
 			mainElement.appendChild(document.querySelector("#send_section").content.cloneNode(true).firstElementChild);
 
-
-
 			let fileChooser =  mainElement.querySelector("#fileChooser");
 			console.log(fileChooser);
 			fileChooser.addEventListener("change", event => this.showTracks());
-
-
 		}
 	});
 
@@ -90,33 +86,52 @@
 				fileList.appendChild(fileEntry);
 				console.log(fileEntry.value);
 			}	
+			
 			fileList.classList.add("customScrollBar");
 			fileList.addEventListener("change", event => {
 				let selected = mainElement.querySelector('select');
 				let value = selected.options[selected.selectedIndex].value;
-				console.log(name,value);
 				this.playSong(value);
 			});
 
 		}
 	});
+	
 	Object.defineProperty(PeerRadioController.prototype, "playSong", {
 		enumerable: false,
 		configurable: false,
 		writable: true,
 		value: async function (file) {
 
-			var context = new AudioContext();
-			console.log(file);
+			this.sendOffer();
+			context = new AudioContext();
 			let buffer = await readAsArrayBuffer(file);
-			let audioSource = Controller.audioContext.createBufferSource();
+			audioSource = Controller.audioContext.createBufferSource();
 			let decodedAudio = await Controller.audioContext.decodeAudioData(buffer);
 			audioSource.buffer = decodedAudio;
-			let gainNode = Controller.audioContext.createGain();
+			gainNode = Controller.audioContext.createGain();
 			audioSource.connect(gainNode);
 			gainNode.connect(Controller.audioContext.destination);
 			audioSource.start();
+			setTimeout(() => this.playNext(null), this.audioSource.buffer.duration);
+		}
+	});
+	
+	Object.defineProperty(PeerRadioController.prototype, "playNext", {
+		enumerable: false,
+		configurable: false,
+		writable: true,
+		value: async function (file) {
 
+			this.updateOffer();
+			let buffer = await readAsArrayBuffer(file);
+			let decodedAudio = await Controller.audioContext.decodeAudioData(buffer);
+			audioSource.buffer = decodedAudio;
+//			gainNode = Controller.audioContext.createGain();
+//			audioSource.connect(gainNode);
+//			gainNode.connect(Controller.audioContext.destination);
+			audioSource.start();
+			setTimeout(() => this.playNext(null), this.audioSource.buffer.duration);
 		}
 	});
 
@@ -145,22 +160,107 @@
 		configurable: false,
 		writable: true,
 		value: async function () {
-			let offerDescription = await this.peerConnection.createOffer();
-			this.peerConnection.setLocalDescription(offerDescription);
+			if (this.connection) this.connection.close();
+			this.connection = new RTCPeerConnection();
+			this.connection.addEventListener("icecandidate", event => this.handleIceCandidate(event.candidate));
+			this.channel = this.connection.createDataChannel("offer");
+
+			let offer = await this.connection.createOffer();
+			await this.connection.setLocalDescription(offer);
 
 			let timestamp = Date.now()*1000;
 			Controller.sessionOwner.lastTransmissionTimestamp = timestamp;
-			Controller.sessionOwner.webAdress = JSON.stringify(offerDescription);
+			Controller.sessionOwner.webAdress = JSON.stringify(offer.sdp);
 			const body = JSON.stringify(Controller.sessionOwner);
 
 			let response = await fetch("/services/people", {method: "POST", credentials: "include", body: body, headers: { 'Content-type': 'application/json' }});
 			if(!response.ok) throw new Error(response.status + " " + response.statusText);
 
-			console.log(Controller.sessionOwner);
-
-			console.log("Finish fetch post person");
+			console.log("Finish sendOffer");
 		}
 	});		
+	
+	/**
+	 * Updates timestamp every song
+	 */
+	Object.defineProperty(PeerRadioController.prototype, "updateOffer", {
+		enumerable: false,
+		configurable: false,
+		writable: true,
+		value: async function () {
+
+			let timestamp = Date.now()*1000;
+			Controller.sessionOwner.lastTransmissionTimestamp = timestamp;
+			const body = JSON.stringify(Controller.sessionOwner);
+
+			let response = await fetch("/services/people", {method: "POST", credentials: "include", body: body, headers: { 'Content-type': 'application/json' }});
+			if(!response.ok) throw new Error(response.status + " " + response.statusText);
+
+			console.log("Finish updateOffer");
+		}
+	});	
+	
+	Object.defineProperty(PeerRadioController.prototype, "acceptOffer", {
+		enumerable: false,
+		configurable: false,
+		writable: true,
+		value: async function (sdp) {
+		if (sdp.length === 0) return;
+
+		if (this.connection) this.connection.close();
+		this.connection = new RTCPeerConnection();
+		this.connection.addEventListener("icecandidate", event => this.handleIceCandidate(event.candidate));
+		this.connection.addEventListener("datachannel", event => this.handleReceiveChannelOpened(event.channel));
+
+		let offer = new RTCSessionDescription({ type: "offer", sdp: sdp });
+		await this.connection.setRemoteDescription(offer);
+		let answer = await this.connection.createAnswer();
+		await this.connection.setLocalDescription(answer);
+		}
+	});
+	
+	Object.defineProperty(PeerRadioController.prototype, "sendMessage", {
+		enumerable: false,
+		configurable: false,
+		writable: true,
+		value: function (data) {
+		this.channel.send(data);
+		}
+	});
+	
+	Object.defineProperty(PeerRadioController.prototype, "closeChannel", {
+		enumerable: false,
+		configurable: false,
+		writable: true,
+		value: function () {
+		if (!this.channel) {
+			this.channel.close();
+			this.channel = null;
+		}
+		}
+	});
+	
+	Object.defineProperty(PeerRadioController.prototype, "handleIceCandidate", {
+		enumerable: false,
+		configurable: false,
+		writable: true,
+		value: async function (iceCandidate) {
+		if (iceCandidate) return;
+
+		let sdp = this.connection.localDescription.sdp;
+		if (this.address) sdp = sdp.replace(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/g, this.address);
+		}
+	});
+	
+	Object.defineProperty(PeerRadioController.prototype, "handleReceiveChannelOpened", {
+		enumerable: false,
+		configurable: false,
+		writable: true,
+		value: function (channel) {
+	   	channel.addEventListener("close", event => this.handleReceiveChannelClosed());
+	 	channel.addEventListener("message", event => this.handleMessageReceived(event.data));
+		}
+	});
 
 	Object.defineProperty(PeerRadioController.prototype, "listen", {
 		enumerable: false,
@@ -174,49 +274,50 @@
 			mainElement.appendChild(document.querySelector("#recieve_section").content.cloneNode(true).firstElementChild);
 
 
-			let fiveMinTimestamp = (Date.now()*1000) - (5 * 60 * 1000);
-			let uri = "/services/people?lastTransmissionTimestamp<=" + fiveMinTimestamp;
+			let fiveMinAgoTimestamp = Date.now() - (5*60*1000);
+			let uri = "/services/people?lastTransmissionTimestamp>=" + fiveMinAgoTimestamp;
 
-			let response = await fetch(uri,{method: "GET", credentials: "include",headers:{'Accept': 'application/json'}});
+			let response = await fetch(uri,{method: "GET", credentials: "include", headers:{'Accept': 'application/json'}});
 			if(!response.ok) throw new Error(response.status + " " + response.statusText);
 
 			let sendingPersons = await response.json();
+			console.log("SendingPersons: "  + sendingPersons);
+			let personList = mainElement.querySelector('select');
 
-			if(sendingPersons == null){
-				console.log("no one is sending currently");
-			}
-
-			for(let person of sendingPersons){
-				let btn = document.createElement("BUTTON");
-				let t = document.createTextNode(person.surname);      
-				btn.appendChild(t);                                
-				mainElement.appendChild(btn);                   
-				btn.addEventListener("click", event => this.startListen());
+			for(let i=0; i<sendingPersons.length;i++){
+				let personEntry = document.createElement('option');
+				personEntry.value = sendingPersons[i].webAdress;
+				personEntry.text = sendingPersons[i].surname;
+				personList.appendChild(personEntry);
 			}	
+			
+			personList.classList.add("customScrollBar");
+			personList.addEventListener("change", event => {
+				let selected = mainElement.querySelector('select');
+				let value = selected.options[selected.selectedIndex].value;
+				this.acceptOffer(value.sdp);
+			});
 		}
 	});
 
-	/*
-	 * Object.defineProperty(PeerRadioController.prototype, "playNext", {
-	 * enumerable: false, configurable: false, writable: true, value: async
-	 * function () { let audioPlayer = mainElement.querySelector("#player");
-	 * audioPlayer.pause();
-	 * mainElement.querySelector("ul").childNodes[nextId].classList.remove("selected");
-	 * nextId++;
-	 * audioPlayer.setAttribute("src",URL.createObjectURL(files[nextId]));
-	 * mainElement.querySelector("ul").childNodes[nextId].classList.add("selected");
-	 * audioPlayer.play(); } });
-	 */
-
-
-
+	Object.defineProperty(PeerRadioController.prototype, "refreshAdress", {
+		enumerable: false,
+		configurable: false,
+		writable: true,
+		value: async function () {
+		let response = await fetch("https://api.ipify.org/", { method: "GET", headers: { "Accept": "text/plain" }});
+		if (!response.ok) throw new Error("HTTP " + response.status + " " + response.statusText);
+		this.address = await response.text();
+		}
+	});
+	
 	/**
 	 * Perform controller callback registration during DOM load event handling.
 	 */
 	window.addEventListener("load", event => {
-		controller.refreshAddress();
 		const anchor = document.querySelector("header li:nth-of-type(3) > a");
 		const controller = new PeerRadioController();
+		controller.refreshAdress;
 		anchor.addEventListener("click", event => controller.display());
 	});
 

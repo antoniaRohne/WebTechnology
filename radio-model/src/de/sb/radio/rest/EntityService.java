@@ -284,7 +284,7 @@ public class EntityService {
 			@QueryParam("email") final String email,
 			@QueryParam("forename") final String forename,
 			@QueryParam("surname") final String surname,
-			@QueryParam("webAdress") final boolean webAdress,
+			@QueryParam("webAdress") final String webAdress,
 			@QueryParam("lastTransmissionTimestamp") final Long lastTransmissionTimestamp
 	) {
 		final EntityManager radioManager = RestJpaLifecycleProvider.entityManager("radio");
