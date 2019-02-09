@@ -67,8 +67,12 @@ public class EntityService {
 			+ "(:email is null or p.email = :email) and " 
 			+ "(:givenName is null or p.surname = :givenName) and "
 			+ "(:familyName is null or p.forename = :familyName) and "
-			+ "(:webAdress is null or p.webAdress = :webAdress) and "
-			+ "(:lastTransmissionTimestamp is null or p.lastTransmissionTimestamp >= :lastTransmissionTimestamp) ";
+			+ "(:negotiatingOffer is null or (p.negotiation.offer is not null and p.negotiation.answer is null) = :negotiatingOffer) and "
+			+ "(:negotiatingAnswer is null or (p.negotiation.offer is not null and p.negotiation.answer is not null) = :negotiatingAnswer) and "
+			+ "(:negotiationOffer is null or p.negotiation.offer = :negotiationOffer) and "
+			+ "(:negotiationAnswer is null or p.negotiation.answer = :negotiationAnswer) and "
+			+ "(:lowerNegotiationTimestamp is null or p.negotiation.timestamp >= :lowerNegotiationTimestamp) and "
+			+ "(:upperNegotiationTimestamp is null or p.negotiation.timestamp <= :upperNegotiationTimestamp)";
 
 	static private final String ALBUM_FILTER_QUERY = "select a.identity from Album as a where "
 			+ "(:lowerCreationTimestamp is null or a.creationTimestamp >= :lowerCreationTimestamp) and "
@@ -284,8 +288,12 @@ public class EntityService {
 			@QueryParam("email") final String email,
 			@QueryParam("forename") final String forename,
 			@QueryParam("surname") final String surname,
-			@QueryParam("webAdress") final String webAdress,
-			@QueryParam("lastTransmissionTimestamp") final Long lastTransmissionTimestamp
+			@QueryParam("negotiatingOffer") final Boolean negotiatingOffer,
+			@QueryParam("negotiatingAnswer") final Boolean negotiatingAnswer,
+			@QueryParam("negotiationOffer") final String negotiationOffer,
+			@QueryParam("negotiationAnswer") final String negotiationAnswer,
+			@QueryParam("lowerNegotiationTimestamp") final Long lowerNegotiationTimestamp,
+			@QueryParam("upperNegotiationTimestamp") final Long upperNegotiationTimestamp
 	) {
 		final EntityManager radioManager = RestJpaLifecycleProvider.entityManager("radio");
 
@@ -298,10 +306,13 @@ public class EntityService {
 				.setParameter("email", email)
 				.setParameter("givenName", forename)
 				.setParameter("familyName", surname)
-				.setParameter("webAdress", webAdress)
-				.setParameter("lastTransmissionTimestamp", lastTransmissionTimestamp)
+				.setParameter("negotiatingOffer", negotiatingOffer)
+				.setParameter("negotiatingAnswer", negotiatingAnswer)
+				.setParameter("negotiationOffer", negotiationOffer)
+				.setParameter("negotiationAnswer", negotiationAnswer)
+				.setParameter("lowerNegotiationTimestamp", lowerNegotiationTimestamp)
+				.setParameter("upperNegotiationTimestamp", upperNegotiationTimestamp)
 				.getResultList();
-		
 		
 		final List<Person> people = new ArrayList<>(); 
 		for (final long reference : references) {
@@ -442,8 +453,7 @@ public class EntityService {
 		person.setGroup(personTemplate.getGroup());
 		person.setForename(personTemplate.getForename());
 		person.setSurname(personTemplate.getSurname());
-		person.setLastTransmissionTimestamp(personTemplate.getLastTransmissionTimestamp());
-		person.setWebAdress(personTemplate.getWebAdress());
+		person.setNegotiation(personTemplate.getNegotiation());
 		if(password != null) person.setPasswordHash(HashTools.sha256HashCode(password));
 		
 		if(insert) {

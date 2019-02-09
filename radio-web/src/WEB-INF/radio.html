@@ -93,24 +93,22 @@
         <button type="button" id="sendButton">Send</button>
         <button type="button" id="receiveButton">Receive</button>
       </div>
-     
     </template>
-     <template id="send_section">
-	      <section id="peer-radio-send-template">
+    
+     <template id="send_section"> <!-- naming -->
+	      <section id="peer-radio-send-template"> <!-- class instead of id -->
 	      <input type = 'file' id = "fileChooser" accept ="audio/mp3, audio/wav" multiple />
 		      <select multiple name="send-items" class="customScrollBar">
 			    
 		      </select>
-		      
 	      </section>
-	      </template>
-	        <template id="recieve_section">
-	      <section id="peer-radio-recieve-template">
-		      <select multiple name="send-users" class="customScrollBar">
-			     
-		      </select>
+	 </template>
+	  
+	 <template id="recieve-section-template">
+	      <section class="recieve-section">
+		     <div></div>
 	      </section>
-	          </template>
+	 </template>
     
   </head>
 

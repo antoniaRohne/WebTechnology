@@ -22,7 +22,7 @@ VALUES
 SET @id1 = LAST_INSERT_ID();
 INSERT INTO Person
 VALUES
-    (@id1, @id0, "guest@htw-radio.de", UNHEX(SHA2("guest",256)), "USER", "Radio", "Guest", null, null);
+    (@id1, @id0, "guest@htw-radio.de", UNHEX(SHA2("guest",256)), "USER", "Radio", "Guest", null, null, null);
 
 INSERT INTO BaseEntity
 VALUES
@@ -30,7 +30,7 @@ VALUES
 SET @id2 = LAST_INSERT_ID();
 INSERT INTO Person
 VALUES
-    (@id2, @id0, "ines.bergmann@web.de", UNHEX(SHA2("ines",256)), "ADMIN", "Bergmann", "Ines", null, null);
+    (@id2, @id0, "ines.bergmann@web.de", UNHEX(SHA2("ines",256)), "ADMIN", "Bergmann", "Ines", null, null, null);
 
 INSERT INTO BaseEntity
 VALUES
@@ -38,7 +38,7 @@ VALUES
 SET @id3 = LAST_INSERT_ID();
 INSERT INTO Person
 VALUES
-    (@id3, @id0, "sascha.baumeister@gmail.com", UNHEX(SHA2("sascha",256)), "ADMIN", "Baumeister", "Sascha", null, null);
+    (@id3, @id0, "sascha.baumeister@gmail.com", UNHEX(SHA2("sascha",256)), "ADMIN", "Baumeister", "Sascha", null, null, null);
 
 INSERT INTO BaseEntity
 VALUES

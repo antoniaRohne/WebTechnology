@@ -1,14 +1,10 @@
 SET CHARACTER SET utf8;
 USE radio;
 
-ALTER TABLE person
-DROP COLUMN WebAdress;
+ALTER TABLE person ADD COLUMN IF NOT EXISTS negotiationOffer VARCHAR(1500) NULL;
+ALTER TABLE person ADD COLUMN IF NOT EXISTS negotiationAnswer VARCHAR(1500) NULL;
+ALTER TABLE person ADD COLUMN IF NOT EXISTS negotiationTimestamp BIGINT NULL;
 
-ALTER TABLE person
-DROP COLUMN LastTransmissionTimestamp;
-
-ALTER TABLE person
-ADD COLUMN webAdress varchar(1024);
-
-ALTER TABLE person
-ADD COLUMN lastTransmissionTimestamp BIGINT;
+ALTER TABLE person ADD INDEX (negotiationOffer);
+ALTER TABLE person ADD INDEX (negotiationAnswer);
+ALTER TABLE person ADD INDEX (negotiationTimestamp);

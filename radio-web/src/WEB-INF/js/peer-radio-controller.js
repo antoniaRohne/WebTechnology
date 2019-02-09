@@ -3,6 +3,7 @@
 (function () {
 	// imports
 	const Controller = de_sb_radio.Controller;
+	const FIVE_MINUTE_MILLIS = 5 * 60 * 1000;
 
 	let nextId = 0;
 	let files;
@@ -102,8 +103,8 @@
 		configurable: false,
 		writable: true,
 		value: async function (file) {
-
 			this.sendOffer();
+			this.sendMessage(file);
 			context = new AudioContext();
 			let buffer = await readAsArrayBuffer(file);
 			audioSource = Controller.audioContext.createBufferSource();
@@ -165,14 +166,10 @@
 			this.connection.addEventListener("icecandidate", event => this.handleIceCandidate(event.candidate));
 			this.channel = this.connection.createDataChannel("offer");
 
-			let offer = await this.connection.createOffer();
-			await this.connection.setLocalDescription(offer);
+			let offer = await negotiateLocalDescription(this.connection, true);
 
-			let timestamp = Date.now()*1000;
-			Controller.sessionOwner.lastTransmissionTimestamp = timestamp;
-			Controller.sessionOwner.webAdress = JSON.stringify(offer.sdp);
+			Controller.sessionOwner.negotiation = { offer: offer.sdp, timestamp: Date.now() };
 			const body = JSON.stringify(Controller.sessionOwner);
-
 			let response = await fetch("/services/people", {method: "POST", credentials: "include", body: body, headers: { 'Content-type': 'application/json' }});
 			if(!response.ok) throw new Error(response.status + " " + response.statusText);
 
@@ -204,18 +201,31 @@
 		enumerable: false,
 		configurable: false,
 		writable: true,
-		value: async function (sdp) {
-		if (sdp.length === 0) return;
-
-		if (this.connection) this.connection.close();
-		this.connection = new RTCPeerConnection();
-		this.connection.addEventListener("icecandidate", event => this.handleIceCandidate(event.candidate));
-		this.connection.addEventListener("datachannel", event => this.handleReceiveChannelOpened(event.channel));
-
-		let offer = new RTCSessionDescription({ type: "offer", sdp: sdp });
-		await this.connection.setRemoteDescription(offer);
-		let answer = await this.connection.createAnswer();
-		await this.connection.setLocalDescription(answer);
+		value: async function (person) {
+			if (person.offer.length === 0) return;
+	
+			if (this.connection) this.connection.close();
+			this.connection = new RTCPeerConnection();
+			this.connection.addEventListener("icecandidate", event => this.handleIceCandidate(event.candidate));
+			this.connection.addEventListener("datachannel", event => this.handleReceiveChannelOpened(event.channel));
+	
+			let offer = { type: "offer", sdp: person.negotiation.offer };
+			await this.connection.setRemoteDescription(offer);
+			let answer = await negotiateLocalDescription(this.connection, false);
+			//answer and offer in DB
+			Controller.sessionOwner.negotiation = { offer: offer.sdp, answer: answer.sdp, timestamp: Date.now() };
+		}
+	});
+	
+	Object.defineProperty(PeerRadioController.prototype, "acceptAnswer", {
+		enumerable: false,
+		configurable: false,
+		writable: true,
+		value: async function (person) {
+			if (person.offer.length === 0) return;
+	
+			let answer = { type: "answer", sdp: person.negotiation.answer };
+			await this.connection.setRemoteDescription(answer);
 		}
 	});
 	
@@ -223,8 +233,9 @@
 		enumerable: false,
 		configurable: false,
 		writable: true,
-		value: function (data) {
-		this.channel.send(data);
+		value: function (file) {
+			if(this.channel.readyState == "open")
+			this.channel.send(file);
 		}
 	});
 	
@@ -257,10 +268,30 @@
 		configurable: false,
 		writable: true,
 		value: function (channel) {
-	   	channel.addEventListener("close", event => this.handleReceiveChannelClosed());
-	 	channel.addEventListener("message", event => this.handleMessageReceived(event.data));
+			this.channel = channel;
+		   //	this.channel.addEventListener("close", event => this.handleReceiveChannelClosed());
+		 	this.channel.addEventListener("message", event => this.handleMessageReceived(event.data));
 		}
 	});
+	
+	function negotiateLocalDescription (connection, offermode){
+		return new Promise(async(resolve, reject) => {
+			connection.onicecandidate = event => {
+				if(!event.candidate){
+					delete connection.icecandidate;
+					resolve(connection.localDescription);
+				}
+			};
+			
+			if(offerMode){
+				let offer = await connection.createOffer();
+				await connection.setLocalDescription(offer);
+			}else{
+				let answer = await connection.createAnswer();
+				await connection.setLocalDescription(answer);
+			}
+		});
+	}
 
 	Object.defineProperty(PeerRadioController.prototype, "listen", {
 		enumerable: false,
@@ -271,32 +302,29 @@
 			if(mainElement.children.length >= 2)
 				mainElement.removeChild(mainElement.lastChild);
 
-			mainElement.appendChild(document.querySelector("#recieve_section").content.cloneNode(true).firstElementChild);
+			mainElement.appendChild(document.querySelector("#recieve-section-template").content.cloneNode(true).firstElementChild);
 
 
-			let fiveMinAgoTimestamp = Date.now() - (5*60*1000);
-			let uri = "/services/people?lastTransmissionTimestamp>=" + fiveMinAgoTimestamp;
+			let queryBuilder = new URLSearchParams();
+			queryBuilder.set("lowerNegotiationTimestamp", Date.now() - FIVE_MINUTE_MILLIS);
+			queryBuilder.set("negotiatingOffer", true);
+			let uri = "/services/people?" + queryBuilder.toString();
 
 			let response = await fetch(uri,{method: "GET", credentials: "include", headers:{'Accept': 'application/json'}});
 			if(!response.ok) throw new Error(response.status + " " + response.statusText);
 
-			let sendingPersons = await response.json();
-			console.log("SendingPersons: "  + sendingPersons);
-			let personList = mainElement.querySelector('select');
+			let sendingPeople = await response.json();
+			console.log("sending people: "  + sendingPeople);
+			let peopleDiv = mainElement.querySelector('div.recieve-section');
 
-			for(let i=0; i<sendingPersons.length;i++){
-				let personEntry = document.createElement('option');
-				personEntry.value = sendingPersons[i].webAdress;
-				personEntry.text = sendingPersons[i].surname;
-				personList.appendChild(personEntry);
+			for(let person of sendingPeople)){
+				let anchor = document.createElement('a');
+				let img = document.createElement('img');
+				img.title = person.forename +" "+ person.surname;
+				img.src = "/services/people/" + person.identity + "/avatar";
+				anchor.appendChild(img);
+				anchor.addEventListener('click', event => this.acceptOffer(person));
 			}	
-			
-			personList.classList.add("customScrollBar");
-			personList.addEventListener("change", event => {
-				let selected = mainElement.querySelector('select');
-				let value = selected.options[selected.selectedIndex].value;
-				this.acceptOffer(value.sdp);
-			});
 		}
 	});
 
@@ -317,7 +345,7 @@
 	window.addEventListener("load", event => {
 		const anchor = document.querySelector("header li:nth-of-type(3) > a");
 		const controller = new PeerRadioController();
-		controller.refreshAdress;
+		//controller.refreshAdress;
 		anchor.addEventListener("click", event => controller.display());
 	});
 
