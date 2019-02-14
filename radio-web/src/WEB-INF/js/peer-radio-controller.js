@@ -5,14 +5,16 @@
 	const Controller = de_sb_radio.Controller;
 	const FIVE_MINUTE_MILLIS = 5 * 60 * 1000;
 
-	let nextId = 0;
 	let files;
+	let index;
 
 	let mainElement;
 	
 	let context;
 	let audioSource;
 	let gainNode;
+	
+	let answered;
 
 	/**
 	 * Creates a new welcome controller that is derived from an abstract
@@ -23,7 +25,8 @@
 		Object.defineProperty(this, "address", { enumerable : true,  writable: true, value: null });
 		Object.defineProperty(this, "connection", { enumerable : true,  writable: true, value: null });
 		Object.defineProperty(this, "channel", { enumerable : true,  writable: true, value: null });
-		
+		this.index = 0;
+		this.answered = false;
 		mainElement = document.querySelector("main");
 	}
 	
@@ -87,13 +90,15 @@
 				fileList.appendChild(fileEntry);
 				console.log(fileEntry.value);
 			}	
+			console.log("current index: " + this.index);
+			this.playSong(this.files[this.index]);
 			
-			fileList.classList.add("customScrollBar");
+			/*fileList.classList.add("customScrollBar");
 			fileList.addEventListener("change", event => {
 				let selected = mainElement.querySelector('select');
 				let value = selected.options[selected.selectedIndex].value;
-				this.playSong(value);
-			});
+				this.playSong(value,true);
+			});*/
 
 		}
 	});
@@ -104,7 +109,6 @@
 		writable: true,
 		value: async function (file) {
 			this.sendOffer();
-			this.sendMessage(file);
 			context = new AudioContext();
 			let buffer = await readAsArrayBuffer(file);
 			audioSource = Controller.audioContext.createBufferSource();
@@ -114,7 +118,8 @@
 			audioSource.connect(gainNode);
 			gainNode.connect(Controller.audioContext.destination);
 			audioSource.start();
-			setTimeout(() => this.playNext(null), this.audioSource.buffer.duration);
+			this.index++;
+			//setTimeout(() => this.playNext(this.files[this.index]), this.audioSource.buffer.duration);
 		}
 	});
 	
@@ -128,9 +133,6 @@
 			let buffer = await readAsArrayBuffer(file);
 			let decodedAudio = await Controller.audioContext.decodeAudioData(buffer);
 			audioSource.buffer = decodedAudio;
-//			gainNode = Controller.audioContext.createGain();
-//			audioSource.connect(gainNode);
-//			gainNode.connect(Controller.audioContext.destination);
 			audioSource.start();
 			setTimeout(() => this.playNext(null), this.audioSource.buffer.duration);
 		}
@@ -174,6 +176,8 @@
 			if(!response.ok) throw new Error(response.status + " " + response.statusText);
 
 			console.log("Finish sendOffer");
+			console.log("start looking for Answer");
+			this.searchForAnswer();
 		}
 	});		
 	
@@ -201,19 +205,42 @@
 		enumerable: false,
 		configurable: false,
 		writable: true,
-		value: async function (person) {
-			if (person.offer.length === 0) return;
-	
+		value: async function (person) {	
 			if (this.connection) this.connection.close();
 			this.connection = new RTCPeerConnection();
 			this.connection.addEventListener("icecandidate", event => this.handleIceCandidate(event.candidate));
-			this.connection.addEventListener("datachannel", event => this.handleReceiveChannelOpened(event.channel));
+			this.connection.ondatachannel = this.handleReceiveChannelOpened;
 	
 			let offer = { type: "offer", sdp: person.negotiation.offer };
 			await this.connection.setRemoteDescription(offer);
 			let answer = await negotiateLocalDescription(this.connection, false);
-			//answer and offer in DB
 			Controller.sessionOwner.negotiation = { offer: offer.sdp, answer: answer.sdp, timestamp: Date.now() };
+			const body = JSON.stringify(Controller.sessionOwner);
+
+			let response = await fetch("/services/people", {method: "POST", credentials: "include", body: body, headers: { 'Content-type': 'application/json' }});
+			if(!response.ok) throw new Error(response.status + " " + response.statusText);
+
+			console.log("Finish acceptOffer");
+		}
+	});
+	
+	Object.defineProperty(PeerRadioController.prototype, "searchForAnswer", {
+		enumerable: false,
+		configurable: false,
+		writable: true,
+		value: async function () {
+			let queryBuilder = new URLSearchParams();
+			queryBuilder.set("negotiatingAnswer", true);
+			queryBuilder.set("negotiationOffer", this.connection.localDescription.sdp);
+			let uri = "/services/people?" + queryBuilder.toString();
+
+			let response = await fetch(uri,{method: "GET", credentials: "include", headers:{'Accept': 'application/json'}});
+			if(!response.ok) throw new Error(response.status + " " + response.statusText);
+			
+			let answeringPeople = await response.json();
+			if(answeringPeople.length > 0){this.acceptAnswer(answeringPeople[0]);}
+			console.log("answered = " + this.answered);
+			if(!this.answered) setTimeout(() => this.searchForAnswer(), 5000);
 		}
 	});
 	
@@ -222,10 +249,12 @@
 		configurable: false,
 		writable: true,
 		value: async function (person) {
-			if (person.offer.length === 0) return;
-	
+			this.answered = true;
+			console.log("Accepted answer!");
 			let answer = { type: "answer", sdp: person.negotiation.answer };
 			await this.connection.setRemoteDescription(answer);
+			let buffer = await readAsArrayBuffer(this.files[0]);
+			setTimeout(() => this.sendMessage(buffer), 5000);
 		}
 	});
 	
@@ -233,9 +262,9 @@
 		enumerable: false,
 		configurable: false,
 		writable: true,
-		value: function (file) {
+		value: function (buffer) {
 			if(this.channel.readyState == "open")
-			this.channel.send(file);
+			this.channel.send(buffer);
 		}
 	});
 	
@@ -244,10 +273,10 @@
 		configurable: false,
 		writable: true,
 		value: function () {
-		if (!this.channel) {
-			this.channel.close();
-			this.channel = null;
-		}
+			if (!this.channel) {
+				this.channel.close();
+				this.channel = null;
+			}
 		}
 	});
 	
@@ -267,14 +296,28 @@
 		enumerable: false,
 		configurable: false,
 		writable: true,
-		value: function (channel) {
-			this.channel = channel;
-		   //	this.channel.addEventListener("close", event => this.handleReceiveChannelClosed());
-		 	this.channel.addEventListener("message", event => this.handleMessageReceived(event.data));
+		value: function (event) {
+			console.log("channel opened");
+			this.channel = event.channel;
+			this.channel.addEventListener("close", event => this.handleReceiveChannelClosed());
+		 	this.channel.onmessage = async function (event) {
+		 		console.log("handle message");
+		 		if(audioSource == null){ //getting multiple messages
+					context = new AudioContext();
+					audioSource = Controller.audioContext.createBufferSource();
+					let decodedAudio = await Controller.audioContext.decodeAudioData(event.data);
+					audioSource.buffer = decodedAudio;
+					gainNode = Controller.audioContext.createGain();
+					audioSource.connect(gainNode);
+					gainNode.connect(Controller.audioContext.destination);
+					audioSource.start();
+					console.log("started song");
+		 		}
+			}
 		}
-	});
+	}); 
 	
-	function negotiateLocalDescription (connection, offermode){
+	function negotiateLocalDescription (connection, offerMode){
 		return new Promise(async(resolve, reject) => {
 			connection.onicecandidate = event => {
 				if(!event.candidate){
@@ -316,14 +359,14 @@
 			let sendingPeople = await response.json();
 			console.log("sending people: "  + sendingPeople);
 			let peopleDiv = mainElement.querySelector('div.recieve-section');
-
-			for(let person of sendingPeople)){
+			for(let person of sendingPeople){
 				let anchor = document.createElement('a');
 				let img = document.createElement('img');
 				img.title = person.forename +" "+ person.surname;
-				img.src = "/services/people/" + person.identity + "/avatar";
+				img.src = "/services/documents/" + person.avatarReference;
 				anchor.appendChild(img);
 				anchor.addEventListener('click', event => this.acceptOffer(person));
+				mainElement.appendChild(anchor);
 			}	
 		}
 	});
@@ -335,7 +378,7 @@
 		value: async function () {
 		let response = await fetch("https://api.ipify.org/", { method: "GET", headers: { "Accept": "text/plain" }});
 		if (!response.ok) throw new Error("HTTP " + response.status + " " + response.statusText);
-		this.address = await response.text();
+			this.address = await response.text();
 		}
 	});
 	
@@ -345,7 +388,6 @@
 	window.addEventListener("load", event => {
 		const anchor = document.querySelector("header li:nth-of-type(3) > a");
 		const controller = new PeerRadioController();
-		//controller.refreshAdress;
 		anchor.addEventListener("click", event => controller.display());
 	});
 
