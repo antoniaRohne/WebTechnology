@@ -317,10 +317,10 @@ display: flex;
 	width:100%;
 	margin: 10px 10px;
 }
-#genreChooser option:hover,#artistChooser option:hover{
+#genreChooser option:hover,#artistChooser option:hover, #peer-radio-send-template option:hover{
 		background-color: #F5F5F5;
 	}
-#genreChooser select,#artistChooser select{
+#genreChooser select,#artistChooser select, #peer-radio-send-template select{
 	min-width: 200px;
 	min-height: 88px;
 	overflow: auto;
@@ -357,4 +357,12 @@ display: flex;
 #genreArtistList ol li{
 	display: flex;
 	align-items: center;
+}
+#peer-radio-send-template{
+	margin: 30px 0;
+	
+}
+#peer-radio-send-template input{
+	margin: 5px 0;
+	
 }

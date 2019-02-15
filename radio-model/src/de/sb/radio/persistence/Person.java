@@ -21,6 +21,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
+import javax.validation.Valid;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -65,11 +66,14 @@ public class Person extends BaseEntity {
 	@Column(nullable = false, updatable = true)
 	private String surname;
 	
-	@Column(nullable = true, updatable = true)
-	private String webAdress;
-	
-	@Column(nullable = true, updatable = true)
-	private Long lastTransmissionTimestamp;
+	@Valid
+	@Embedded
+	@AttributeOverrides({
+			@AttributeOverride(name = "offer", column = @Column(name = "negotiationOffer")),
+			@AttributeOverride(name = "answer", column = @Column(name = "negotiationAnswer")),
+			@AttributeOverride(name = "timestamp", column = @Column(name = "negotiationTimestamp"))
+	})
+	private Negotiation negotiation;
 	
 	@NotNull
 	@OneToMany(mappedBy="owner", cascade = {CascadeType.REMOVE, CascadeType.REFRESH, CascadeType.MERGE, CascadeType.DETACH})
@@ -204,6 +208,14 @@ public class Person extends BaseEntity {
 		return this.avatar == null ? 0 : this.avatar.getIdentity();
 	}
 
+	@JsonbProperty
+	public Negotiation getNegotiation () {
+		return this.negotiation;
+	}
+
+	public void setNegotiation (Negotiation negotiation) {
+		this.negotiation = negotiation;
+	}
 
 	/**
 	 * Returns the avatar.
@@ -231,23 +243,5 @@ public class Person extends BaseEntity {
 	@JsonbProperty
 	public long[] getTrackReferences() {
 		return this.tracks.stream().mapToLong(track -> track.getIdentity()).sorted().toArray();
-	}
-	
-	@JsonbProperty
-	public String getWebAdress () {
-		return webAdress;
-	}
-
-	public void setWebAdress (String sdp) {
-		webAdress = sdp;
-	}
-	
-	@JsonbProperty
-	public Long getLastTransmissionTimestamp () {
-		return lastTransmissionTimestamp;
-	}
-
-	public void setLastTransmissionTimestamp (Long timestamp) {
-		lastTransmissionTimestamp = timestamp;
 	}
 }
